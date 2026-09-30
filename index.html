@@ -4,10 +4,10 @@
 <!--
 ====================================================================
 [MAGARI APP - HISTORICAL CHANGELOG REGISTRY & ARCHIVE]
-- v3.8.21 (PRODUZIONE - SEPARAZIONE CARRELLO ORDINI PER SEDE):
-  * Gestione indipendente delle quantità d'ordine (orderQty) per Vasastan e Östermalm.
-  * Mantenuti i totali parziali e il Gran Totale SEK nel Report Consumi.
-  * Mantenuto link nativo WhatsApp, storno giacenze e filtri A-Z.
+- v3.8.27 (PRODUZIONE - FIX EXPORT EXCEL CATEGORIE, TOTALI & FORMATTAZIONE COLONNE):
+  * Gestita la divisione dei fogli/sezioni Excel tra Alcolici/Bevande e Cibo/Supplies.
+  * Aggiunto calcolo dei totali e formattazione larghezza colonne automatica nei file scaricati.
+  * Aggiornati i riferimenti UI di versione a v3.8.27.
 ====================================================================
 -->
     <meta charset="UTF-8">
@@ -16,7 +16,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Magari">
-    <title>Magari v3.8.21</title>
+    <title>Magari v3.8.27</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -45,7 +45,7 @@
         <div class="drawer" id="drawer">
             <div class="drawer-header">
                 <div class="brand-title" style="font-size: 24px;">MAGARI</div>
-                <div class="brand-subtitle" style="font-size: 8px;">v3.8.21 PRODUZIONE</div>
+                <div class="brand-subtitle" style="font-size: 8px;">v3.8.27 PRODUZIONE</div>
             </div>
             <ul class="drawer-menu">
                 <li onclick="navigateTo('ordini')">
@@ -73,7 +73,7 @@
             <button class="menu-btn" onclick="toggleMenu()">☰</button>
             <div class="header-brand-text">
                 <div class="brand-title">MAGARI</div>
-                <div class="brand-subtitle">v3.8.21 PRODUZIONE</div>
+                <div class="brand-subtitle">v3.8.27 PRODUZIONE</div>
             </div>
             <div class="page-badge" id="page-title">Ordini</div>
         </div>
@@ -167,10 +167,9 @@
         <div id="view-storico" class="view-section">
             <div class="top-bar-container">
                 <button class="reset-btn" onclick="requestPinAction('clear_history')">🔒 🗑️ Svuota Tutto lo Storico Ordini</button>
-                <select id="filter-history-location" class="filter-select" onchange="filterHistoryItems()">
-                    <option value="active">📍 Mostra Sede Attiva</option>
-                    <option value="all">🌐 Tutte le Sedi</option>
-                </select>
+                <div style="font-size:12px; font-weight:700; color:var(--primary); background:#e8f5e9; padding:6px 10px; border-radius:6px; border:1px solid #c8e6c9;">
+                    📍 Ordini visualizzati per la Sede Attiva
+                </div>
                 <input type="text" id="search-history-input" class="search-input" placeholder="Cerca nello storico..." oninput="filterHistoryItems()">
             </div>
             <div class="content-list" id="history-list"></div>
@@ -306,10 +305,9 @@
 
     <div class="modal" id="export-excel-modal">
         <div class="modal-title">📊 Export Inventory (English Excel)</div>
-        <div class="form-group"><label>Tipologia Report:</label><select id="export-type-select" class="form-control"><option value="food">🍕 Food & Supplies</option><option value="alcohol">🍷 Alcohol & Beverages</option><option value="all">📦 Full Inventory</option></select></div>
-        <div class="form-group"><label>Nome Operatore:</label><input type="text" id="export-operator-name" class="form-control"></div>
-        <div class="form-group"><label>Email Copia:</label><input type="email" id="export-target-email" class="form-control"></div>
-        <div class="modal-actions"><button class="btn-cancel" onclick="closeExportExcelModal()">Annulla</button><button class="btn-save" style="background-color: var(--excel-green);" onclick="generateAndExportExcel()">Download</button></div>
+        <div class="form-group"><label>Tipologia Report:</label><select id="export-type-select" class="form-control"><option value="food">🍕 Food & Supplies</option><option value="alcohol">🍷 Alcohol & Beverages</option><option value="all">📦 Full Inventory (Entrambi i Fogli)</option></select></div>
+        <div class="form-group"><label>Nome Operatore:</label><input type="text" id="export-operator-name" class="form-control" placeholder="es. Nicolas"></div>
+        <div class="modal-actions"><button class="btn-cancel" onclick="closeExportExcelModal()">Annulla</button><button class="btn-save" style="background-color: var(--excel-green);" onclick="generateAndExportExcel()">Download Excel</button></div>
     </div>
 
     <div class="modal" id="pin-modal">
@@ -339,8 +337,8 @@
         <div class="form-group"><label>Categoria</label><select id="new-category-select" class="form-control"><option value="Latticini">🧀 Latticini</option><option value="Farine & Secco">🌾 Farine & Secco</option><option value="Conserve & Pomodoro">🍅 Conserve & Pomodoro</option><option value="Salumi & Carni">🥩 Salumi & Carni</option><option value="Alcolici">🍷 Alcolici</option><option value="Bevande">🥤 Bevande</option><option value="Surgelati">❄️ Surgelati</option><option value="Ortofrutta">🥗 Ortofrutta</option><option value="Pulizia & Monouso">🧹 Pulizia & Monouso</option><option value="Altro">📦 Altro</option></select></div>
         <div class="form-group"><label>Fornitore</label><select id="new-supplier-select" class="form-control"></select></div>
         <div style="display:flex; gap:8px;">
-            <div class="form-group" style="flex:1;"><label>Min Vasastan</label><input type="number" id="new-min-vasastan" class="form-control" value="2"></div>
-            <div class="form-group" style="flex:1;"><label>Min Östermalm</label><input type="number" id="new-min-ostermalm" class="form-control" value="2"></div>
+            <div class="form-group" style="flex:1;"><label>Min Vasastan</label><input type="number" id="new-min-vasastan" class="form-control" value="2" min="0"></div>
+            <div class="form-group" style="flex:1;"><label>Min Östermalm</label><input type="number" id="new-min-ostermalm" class="form-control" value="2" min="0"></div>
         </div>
         <div style="display:flex; gap:8px;">
             <div class="form-group" style="flex:1;"><label>Prezzo (SEK)</label><input type="number" step="0.01" id="new-price" class="form-control" value="0"></div>
@@ -358,7 +356,8 @@
         <div class="form-group"><label>Email</label><input type="email" id="supp-email" class="form-control"></div>
         <div class="modal-actions"><button class="btn-cancel" onclick="closeAddSupplierModal()">Annulla</button><button class="btn-save" onclick="saveSupplier()">Salva</button></div>
     </div>
-<style>
+
+    <style>
         :root {
             --primary: #043927; --bg: #f4f6f8; --card-bg: #ffffff; --text: #222222;
             --text-secondary: #555555; --border: #e0e0e0; --warning: #ff9800; --danger: #e53935; --whatsapp: #25d366;
@@ -496,9 +495,22 @@
 
         .badge-notification { background: var(--danger); color: white; border-radius: 12px; font-size: 11px; font-weight: 800; padding: 2px 8px; display: inline-block; }
     </style>
-<script type="module">
+
+    <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { 
+            initializeFirestore, 
+            persistentLocalCache, 
+            persistentMultipleTabManager,
+            doc, 
+            setDoc, 
+            onSnapshot, 
+            collection, 
+            updateDoc, 
+            deleteDoc, 
+            writeBatch,
+            getDoc 
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAYoG8kDRoEE6AGhAStCvfwCwPZSHSl8j4",
@@ -510,76 +522,16 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const appDocRef = doc(db, "magazzino_db", "dati");
+
+        // 1. INIZIALIZZAZIONE FIRESTORE CON SUPPORTO OFFLINE
+        const db = initializeFirestore(app, {
+            localCache: persistentLocalCache({tabManager: persistentMultipleTabManager()})
+        });
 
         window.appPin = null; 
         window.pendingPinAction = null;
         window.activeLocation = null;
-        window.supplierNotesMap = {};
         window.activeVerifyHistoryId = null;
-
-        window.getEffectivePin = function() {
-            return (window.appPin && window.appPin !== "null" && String(window.appPin).trim() !== "") ? String(window.appPin) : "1234";
-        };
-
-        window.getLocationKey = function() {
-            return (window.activeLocation && window.activeLocation.includes('Östermalm')) ? 'ostermalm' : 'vasastan';
-        };
-
-        // Helper per le giacenze per sede
-        window.getQty = function(i) {
-            const key = window.getLocationKey();
-            return key === 'ostermalm' ? (i.qty_ostermalm ?? 0) : (i.qty_vasastan ?? i.qty ?? 0);
-        };
-
-        window.setQty = function(i, v) {
-            const key = window.getLocationKey();
-            if (key === 'ostermalm') i.qty_ostermalm = parseFloat(v) || 0;
-            else i.qty_vasastan = parseFloat(v) || 0;
-        };
-
-        // Helper per il carrello ordini per sede
-        window.getOrderQty = function(i) {
-            const key = window.getLocationKey();
-            return key === 'ostermalm' ? (i.orderQty_ostermalm ?? 0) : (i.orderQty_vasastan ?? i.orderQty ?? 0);
-        };
-
-        window.setOrderQty = function(i, v) {
-            const key = window.getLocationKey();
-            if (key === 'ostermalm') i.orderQty_ostermalm = parseFloat(v) || 0;
-            else i.orderQty_vasastan = parseFloat(v) || 0;
-        };
-
-        window.getMin = function(i) {
-            const key = window.getLocationKey();
-            return key === 'ostermalm' ? (i.minQty_ostermalm ?? 2) : (i.minQty_vasastan ?? i.minQty ?? 2);
-        };
-
-        window.getLastUpdateBy = function(i) {
-            const key = window.getLocationKey();
-            return key === 'ostermalm' ? (i.lastUpdateBy_ostermalm ?? '') : (i.lastUpdateBy_vasastan ?? '');
-        };
-
-        window.getLastUpdateDate = function(i) {
-            const key = window.getLocationKey();
-            return key === 'ostermalm' ? (i.lastUpdateDate_ostermalm ?? '') : (i.lastUpdateDate_vasastan ?? '');
-        };
-
-        window.setLastUpdate = function(i, opName) {
-            const key = window.getLocationKey();
-            const nowStr = new Date().toISOString(); 
-            const displayStr = new Date().toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-            if (key === 'ostermalm') {
-                i.lastUpdateBy_ostermalm = opName;
-                i.lastUpdateDate_ostermalm = displayStr;
-                i.lastUpdateRaw_ostermalm = nowStr;
-            } else {
-                i.lastUpdateBy_vasastan = opName;
-                i.lastUpdateDate_vasastan = displayStr;
-                i.lastUpdateRaw_vasastan = nowStr;
-            }
-        };
 
         window.defaultSuppliers = [
             { id: 1700000001, name: "Paolo's Tiramisu", phone: "0764211121", email: "paolo@tiramisusthlm.se", color: "#f57c00" },
@@ -600,79 +552,95 @@
         window.orderHistoryData = [];
         window.bugReportsData = [];
 
-        onSnapshot(appDocRef, (snapshot) => {
-            if (snapshot.exists()) {
-                const data = snapshot.data();
-                if (data.suppliers && data.suppliers.length > 0) window.suppliersData = data.suppliers;
-                if (data.inventory && data.inventory.length > 0) window.inventoryData = data.inventory;
-                if (data.history) window.orderHistoryData = data.history;
-                if (data.bugReports) window.bugReportsData = data.bugReports;
-                
-                if (data.pin !== undefined && data.pin !== null && data.pin !== "null" && String(data.pin).trim() !== "") {
-                    window.appPin = String(data.pin);
-                } else {
-                    window.appPin = null;
-                }
-            }
-            window.populateAllSupplierFilters();
-            window.updatePinUI();
+        // 2. LISTENERS IN TEMPO REALE SULLE NUOVE COLLEZIONI SEPARATE
+        onSnapshot(collection(db, "inventory"), (snapshot) => {
+            window.inventoryData = snapshot.docs.map(doc => doc.data());
             window.refreshAllViews();
         });
 
-        window.saveDataToCloud = async function() {
-            try {
-                await setDoc(appDocRef, {
-                    inventory: window.inventoryData,
-                    suppliers: window.suppliersData,
-                    history: window.orderHistoryData,
-                    bugReports: window.bugReportsData,
-                    pin: window.appPin
-                }, { merge: true });
-            } catch (e) { console.error(e); }
+        onSnapshot(collection(db, "suppliers"), (snapshot) => {
+            if(!snapshot.empty) {
+                window.suppliersData = snapshot.docs.map(doc => doc.data());
+            }
+            window.populateAllSupplierFilters();
+            window.refreshAllViews();
+        });
+
+        onSnapshot(collection(db, "history"), (snapshot) => {
+            window.orderHistoryData = snapshot.docs.map(doc => doc.data()).sort((a, b) => b.id - a.id);
+            window.refreshAllViews();
+        });
+
+        onSnapshot(collection(db, "bugReports"), (snapshot) => {
+            window.bugReportsData = snapshot.docs.map(doc => doc.data()).sort((a, b) => b.id - a.id);
+            window.refreshAllViews();
+        });
+
+        onSnapshot(doc(db, "settings", "config"), (snapshot) => {
+            if (snapshot.exists()) {
+                const data = snapshot.data();
+                window.appPin = (data.pin && String(data.pin).trim() !== "null") ? String(data.pin) : null;
+            } else {
+                window.appPin = null;
+            }
+            window.updatePinUI();
+        });
+
+        // AUTO-MIGRAZIONE DAL VECCHIO DOCUMENTO (si esegue 1 volta sola se necessario)
+        setTimeout(async () => {
+            if(window.inventoryData.length === 0) {
+                const oldRef = doc(db, "magazzino_db", "dati");
+                const oldSnap = await getDoc(oldRef);
+                if(oldSnap.exists()) {
+                    const data = oldSnap.data();
+                    const batch = writeBatch(db);
+                    if(data.inventory) data.inventory.forEach(i => batch.set(doc(db, "inventory", String(i.id)), i));
+                    if(data.suppliers) data.suppliers.forEach(s => batch.set(doc(db, "suppliers", String(s.id)), s));
+                    if(data.history) data.history.forEach(h => batch.set(doc(db, "history", String(h.id)), h));
+                    if(data.bugReports) data.bugReports.forEach(b => batch.set(doc(db, "bugReports", String(b.id)), b));
+                    if(data.pin) batch.set(doc(db, "settings", "config"), { pin: data.pin });
+                    
+                    await batch.commit();
+                    console.log("Migrazione dati storici completata con successo!");
+                }
+            }
+        }, 2500);
+
+        // HELPERS (Giacenze, Sedi, Carrello)
+        window.getEffectivePin = () => (window.appPin && window.appPin !== "null" && String(window.appPin).trim() !== "") ? String(window.appPin) : "1234";
+        window.getLocationKey = () => (window.activeLocation && window.activeLocation.includes('Östermalm')) ? 'ostermalm' : 'vasastan';
+
+        window.getQty = (i) => window.getLocationKey() === 'ostermalm' ? (i.qty_ostermalm ?? 0) : (i.qty_vasastan ?? i.qty ?? 0);
+        window.getOrderQty = (i) => window.getLocationKey() === 'ostermalm' ? (i.orderQty_ostermalm ?? 0) : (i.orderQty_vasastan ?? i.orderQty ?? 0);
+        window.getMin = (i) => window.getLocationKey() === 'ostermalm' ? (i.minQty_ostermalm ?? 2) : (i.minQty_vasastan ?? i.minQty ?? 2);
+        window.getLastUpdateBy = (i) => window.getLocationKey() === 'ostermalm' ? (i.lastUpdateBy_ostermalm ?? '') : (i.lastUpdateBy_vasastan ?? '');
+        window.getLastUpdateDate = (i) => window.getLocationKey() === 'ostermalm' ? (i.lastUpdateDate_ostermalm ?? '') : (i.lastUpdateDate_vasastan ?? '');
+
+        window.getStockUpdatesObj = function(newQty, opName) {
+            const key = window.getLocationKey();
+            const nowStr = new Date().toISOString(); 
+            const displayStr = new Date().toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            if (key === 'ostermalm') return { qty_ostermalm: newQty, lastUpdateBy_ostermalm: opName, lastUpdateDate_ostermalm: displayStr, lastUpdateRaw_ostermalm: nowStr };
+            return { qty_vasastan: newQty, lastUpdateBy_vasastan: opName, lastUpdateDate_vasastan: displayStr, lastUpdateRaw_vasastan: nowStr };
         };
 
+        // UI UTILS
         window.showAlert = function(msg) {
             const toast = document.getElementById('toast-notification');
-            if (toast) {
-                toast.innerText = msg;
-                toast.classList.add('show');
-                setTimeout(() => { toast.classList.remove('show'); }, 3500);
-            }
+            if (toast) { toast.innerText = msg; toast.classList.add('show'); setTimeout(() => { toast.classList.remove('show'); }, 3500); }
         };
-
         window.showInfoModal = function(title, text) {
             document.getElementById('info-modal-title').innerText = `ℹ️ ${title}`;
             document.getElementById('info-modal-body').innerText = text;
             document.getElementById('info-modal').classList.add('active');
             document.getElementById('overlay').classList.add('active');
         };
-
         window.closeInfoModal = function() {
             document.getElementById('info-modal').classList.remove('active');
-            if (!document.getElementById('summary-modal').classList.contains('active')) {
-                document.getElementById('overlay').classList.remove('active');
-            }
+            if (!document.getElementById('summary-modal').classList.contains('active')) document.getElementById('overlay').classList.remove('active');
         };
-
-        window.toggleFavorite = function(itemId) {
-            const item = window.inventoryData.find(x => x.id === itemId);
-            if (item) {
-                item.isFavorite = !item.isFavorite;
-                saveDataToCloud();
-                refreshAllViews();
-                window.showAlert(item.isFavorite ? `⭐ ${item.name} aggiunto ai Preferiti!` : `☆ ${item.name} rimosso dai Preferiti.`);
-            }
-        };
-
-        window.translateUnitToSwedish = function(unit) {
-            const map = { "Bottiglie": "flaskor", "Unità": "st", "Kg": "kg", "Litri": "liter", "Cartoni": "kartonger", "Sacchi": "säckar" };
-            return map[unit] || unit || "st";
-        };
-
-        window.getCategoryEmoji = function(cat) {
-            const map = { "Latticini": "🧀", "Farine & Secco": "🌾", "Conserve & Pomodoro": "🍅", "Salumi & Carni": "🥩", "Alcolici": "🍷", "Bevande": "🥤", "Surgelati": "❄️", "Ortofrutta": "🥗", "Pulizia & Monouso": "🧹", "Altro": "📦" };
-            return map[cat] || "📦";
-        };
+        window.translateUnitToSwedish = (unit) => ({ "Bottiglie": "flaskor", "Unità": "st", "Kg": "kg", "Litri": "liter", "Cartoni": "kartonger", "Sacchi": "säckar" }[unit] || unit || "st");
+        window.getCategoryEmoji = (cat) => ({ "Latticini": "🧀", "Farine & Secco": "🌾", "Conserve & Pomodoro": "🍅", "Salumi & Carni": "🥩", "Alcolici": "🍷", "Bevande": "🥤", "Surgelati": "❄️", "Ortofrutta": "🥗", "Pulizia & Monouso": "🧹", "Altro": "📦" }[cat] || "📦");
 
         window.setActiveLocation = function(loc) {
             window.activeLocation = loc;
@@ -684,9 +652,9 @@
             window.refreshAllViews();
         };
 
-        window.promptChangeLocation = function() { document.getElementById('location-guard-banner').style.display = 'flex'; };
-        window.toggleMenu = function() { document.getElementById('drawer').classList.toggle('open'); document.getElementById('overlay').classList.toggle('active'); };
-        window.closeAll = function() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('active')); document.getElementById('overlay').classList.remove('active'); document.getElementById('drawer').classList.remove('open'); };
+        window.promptChangeLocation = () => document.getElementById('location-guard-banner').style.display = 'flex';
+        window.toggleMenu = () => { document.getElementById('drawer').classList.toggle('open'); document.getElementById('overlay').classList.toggle('active'); };
+        window.closeAll = () => { document.querySelectorAll('.modal').forEach(m => m.classList.remove('active')); document.getElementById('overlay').classList.remove('active'); document.getElementById('drawer').classList.remove('open'); };
 
         window.navigateTo = function(sec) {
             document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
@@ -706,8 +674,7 @@
 
         window.verifySectionPin = function(sec) {
             const val = document.getElementById(`pin-input-${sec}`).value;
-            const targetPin = window.getEffectivePin();
-            if (String(val) === String(targetPin)) {
+            if (String(val) === String(window.getEffectivePin())) {
                 const banner = document.getElementById(`lock-banner-${sec}`);
                 if (banner) banner.style.display = 'none';
                 window.showAlert("🔓 Accesso autorizzato!");
@@ -723,57 +690,78 @@
 
         window.verifyPin = function() {
             const val = document.getElementById('input-verify-pin').value;
-            const targetPin = window.getEffectivePin();
-            if (String(val) === String(targetPin)) {
+            if (String(val) === String(window.getEffectivePin())) {
                 const actionToRun = window.pendingPinAction;
                 closePinModal();
-                if (actionToRun) executeProtectedAction(actionToRun.type, actionToRun.extraData);
+                if (actionToRun) window.executeProtectedAction(actionToRun.type, actionToRun.extraData);
             } else { window.showAlert("❌ PIN Errato!"); }
         };
 
-        window.closePinModal = function() { 
-            document.getElementById('pin-modal').classList.remove('active'); 
-            document.getElementById('overlay').classList.remove('active'); 
-            window.pendingPinAction = null; 
-        };
-        window.executeProtectedAction = function(type, extraData) {
-            if (type === 'reset_stock_quantities') {
-                const key = window.getLocationKey();
-                const locLabel = key === 'ostermalm' ? 'Östermalm' : 'Vasastan';
-                if (confirm(`Azzerare giacenze per la sede attiva (${locLabel})?`)) {
-                    window.inventoryData.forEach(i => { 
-                        if (key === 'ostermalm') {
-                            i.qty_ostermalm = 0; i.lastUpdateBy_ostermalm = ''; i.lastUpdateDate_ostermalm = ''; i.lastUpdateRaw_ostermalm = '';
-                        } else {
-                            i.qty_vasastan = 0; i.lastUpdateBy_vasastan = ''; i.lastUpdateDate_vasastan = ''; i.lastUpdateRaw_vasastan = '';
-                        }
-                    });
-                    saveDataToCloud(); refreshAllViews(); window.showAlert(`✅ Giacenze azzerate per ${locLabel}!`);
+        window.closePinModal = () => { document.getElementById('pin-modal').classList.remove('active'); document.getElementById('overlay').classList.remove('active'); window.pendingPinAction = null; };
+
+        // ESECUZIONE AZIONI PROTETTE CON AGGIORNAMENTI BATCH ATOMICI
+        window.executeProtectedAction = async function(type, extraData) {
+            try {
+                if (type === 'reset_stock_quantities') {
+                    const key = window.getLocationKey();
+                    const locLabel = key === 'ostermalm' ? 'Östermalm' : 'Vasastan';
+                    if (confirm(`Azzerare giacenze per la sede attiva (${locLabel})?`)) {
+                        const batch = writeBatch(db);
+                        window.inventoryData.forEach(i => {
+                            const ref = doc(db, "inventory", String(i.id));
+                            if (key === 'ostermalm') batch.update(ref, { qty_ostermalm: 0, lastUpdateBy_ostermalm: '', lastUpdateDate_ostermalm: '', lastUpdateRaw_ostermalm: '' });
+                            else batch.update(ref, { qty_vasastan: 0, lastUpdateBy_vasastan: '', lastUpdateDate_vasastan: '', lastUpdateRaw_vasastan: '' });
+                        });
+                        await batch.commit();
+                        window.showAlert(`✅ Giacenze azzerate per ${locLabel}!`);
+                    }
+                } else if (type === 'clear_history') {
+                    if (confirm("Svuotare lo storico ordini?")) {
+                        const batch = writeBatch(db);
+                        window.orderHistoryData.forEach(h => batch.delete(doc(db, "history", String(h.id))));
+                        await batch.commit();
+                        window.showAlert("🗑️ Storico svuotato!");
+                    }
+                } else if (type === 'delete_single_history') {
+                    if (confirm("Eliminare questa voce dallo storico?")) { 
+                        const h = window.orderHistoryData[extraData];
+                        await deleteDoc(doc(db, "history", String(h.id))); 
+                    }
+                } else if (type === 'toggle_bug_status') {
+                    const bug = window.bugReportsData[extraData];
+                    await updateDoc(doc(db, "bugReports", String(bug.id)), { resolved: !bug.resolved });
+                    window.showAlert(!bug.resolved ? "✅ Segnalazione contrassegnata come risolta" : "🔄 Segnalazione riaperta");
+                } else if (type === 'delete_bug_report') {
+                    if (confirm("Eliminare definitivamente questa segnalazione?")) { 
+                        const bug = window.bugReportsData[extraData];
+                        await deleteDoc(doc(db, "bugReports", String(bug.id))); 
+                        window.showAlert("🗑️ Segnalazione eliminata!"); 
+                    }
+                } else if (type === 'reset_suppliers') {
+                    if (confirm("Ripristinare i fornitori di default?")) {
+                        const batch = writeBatch(db);
+                        window.suppliersData.forEach(s => batch.delete(doc(db, "suppliers", String(s.id))));
+                        window.defaultSuppliers.forEach(s => batch.set(doc(db, "suppliers", String(s.id)), s));
+                        await batch.commit();
+                        window.showAlert("✅ Fornitori ripristinati!");
+                    }
+                } else if (type === 'remove_pin') {
+                    await setDoc(doc(db, "settings", "config"), { pin: null }, { merge: true });
+                    window.showAlert("🔓 PIN custom rimosso.");
+                } else if (type === 'reset_all_data') {
+                    if (confirm("RESET TOTALE DATABASE PRODUZIONE? Questa azione elimina e formatta tutti i dati.")) {
+                        const batch = writeBatch(db);
+                        window.inventoryData.forEach(i => batch.delete(doc(db, "inventory", String(i.id))));
+                        window.orderHistoryData.forEach(h => batch.delete(doc(db, "history", String(h.id))));
+                        window.bugReportsData.forEach(b => batch.delete(doc(db, "bugReports", String(b.id))));
+                        window.suppliersData.forEach(s => batch.delete(doc(db, "suppliers", String(s.id))));
+                        window.defaultSuppliers.forEach(s => batch.set(doc(db, "suppliers", String(s.id)), s));
+                        batch.delete(doc(db, "settings", "config"));
+                        await batch.commit();
+                        window.showAlert("⚠️ Reset completato.");
+                    }
                 }
-            } else if (type === 'clear_history') {
-                if (confirm("Svuotare lo storico ordini?")) { window.orderHistoryData = []; saveDataToCloud(); filterHistoryItems(); window.showAlert("🗑️ Storico svuotato!"); }
-            } else if (type === 'delete_single_history') {
-                if (confirm("Eliminare questa voce dallo storico?")) { window.orderHistoryData.splice(extraData, 1); saveDataToCloud(); filterHistoryItems(); }
-            } else if (type === 'toggle_bug_status') {
-                const bug = window.bugReportsData[extraData];
-                if (bug) {
-                    bug.resolved = !bug.resolved;
-                    saveDataToCloud();
-                    updateBugBadgesAndAdminList();
-                    window.showAlert(bug.resolved ? "✅ Segnalazione contrassegnata come risolta" : "🔄 Segnalazione riaperta");
-                }
-            } else if (type === 'delete_bug_report') {
-                if (confirm("Eliminare definitivamente questa segnalazione?")) { window.bugReportsData.splice(extraData, 1); saveDataToCloud(); updateBugBadgesAndAdminList(); window.showAlert("🗑️ Segnalazione eliminata!"); }
-            } else if (type === 'reset_suppliers') {
-                if (confirm("Ripristinare i fornitori di default?")) { window.suppliersData = [...window.defaultSuppliers]; saveDataToCloud(); refreshAllViews(); window.showAlert("✅ Fornitori ripristinati!"); }
-            } else if (type === 'remove_pin') {
-                window.appPin = null; saveDataToCloud(); updatePinUI(); window.showAlert("🔓 PIN custom rimosso.");
-            } else if (type === 'reset_all_data') {
-                if (confirm("RESET TOTALE DATABASE PRODUZIONE?")) {
-                    window.inventoryData = []; window.suppliersData = [...window.defaultSuppliers]; window.orderHistoryData = []; window.bugReportsData = []; window.appPin = null;
-                    saveDataToCloud(); refreshAllViews(); window.showAlert("⚠️ Reset completato.");
-                }
-            }
+            } catch(e) { console.error("Errore esecuzione:", e); window.showAlert("❌ Errore di sincronizzazione"); }
         };
 
         window.updatePinUI = function() {
@@ -786,22 +774,22 @@
             }
         };
 
-        window.openSetPinModal = function() { document.getElementById('old-pin-group').style.display = (window.appPin && window.appPin !== "null") ? 'block' : 'none'; document.getElementById('set-pin-modal').classList.add('active'); };
-        window.closeSetPinModal = function() { document.getElementById('set-pin-modal').classList.remove('active'); };
-        window.saveNewPin = function() {
+        window.openSetPinModal = () => { document.getElementById('old-pin-group').style.display = (window.appPin && window.appPin !== "null") ? 'block' : 'none'; document.getElementById('set-pin-modal').classList.add('active'); };
+        window.closeSetPinModal = () => document.getElementById('set-pin-modal').classList.remove('active');
+        window.saveNewPin = async function() {
             const p1 = document.getElementById('input-new-pin').value;
             const p2 = document.getElementById('input-confirm-pin').value;
             if (!/^\d{4}$/.test(p1)) return window.showAlert("⚠️ Il PIN deve essere di 4 cifre.");
             if (p1 !== p2) return window.showAlert("⚠️ I PIN non coincidono.");
-            window.appPin = String(p1); saveDataToCloud(); updatePinUI(); closeSetPinModal(); window.showAlert("🔐 Nuovo PIN salvato!");
+            await setDoc(doc(db, "settings", "config"), { pin: String(p1) }, { merge: true });
+            closeSetPinModal(); window.showAlert("🔐 Nuovo PIN salvato!");
         };
 
+        // ORDINAMENTO
         window.sortStockItemsArray = function(items, sortMode) {
             return [...items].sort((a, b) => {
-                const qtyA = window.getQty(a), qtyB = window.getQty(b);
-                const minA = window.getMin(a), minB = window.getMin(b);
-                const isLowA = qtyA < minA ? 1 : 0;
-                const isLowB = qtyB < minB ? 1 : 0;
+                const qtyA = window.getQty(a), qtyB = window.getQty(b), minA = window.getMin(a), minB = window.getMin(b);
+                const isLowA = qtyA < minA ? 1 : 0, isLowB = qtyB < minB ? 1 : 0;
                 if (sortMode === 'name-asc') return a.name.localeCompare(b.name);
                 if (sortMode === 'stock-asc') return qtyA - qtyB;
                 if (sortMode === 'low-stock') { if (isLowA !== isLowB) return isLowB - isLowA; return a.name.localeCompare(b.name); }
@@ -817,14 +805,11 @@
                 return 0;
             });
         };
-
         window.sortItemsArray = function(items, sortMode) {
             return [...items].sort((a, b) => {
                 if (sortMode === 'name-asc') return a.name.localeCompare(b.name);
-                const qtyA = window.getQty(a), qtyB = window.getQty(b);
-                const minA = window.getMin(a), minB = window.getMin(b);
-                const isLowA = qtyA < minA ? 1 : 0;
-                const isLowB = qtyB < minB ? 1 : 0;
+                const qtyA = window.getQty(a), qtyB = window.getQty(b), minA = window.getMin(a), minB = window.getMin(b);
+                const isLowA = qtyA < minA ? 1 : 0, isLowB = qtyB < minB ? 1 : 0;
                 if (sortMode === 'low-stock') { if (isLowA !== isLowB) return isLowB - isLowA; return a.name.localeCompare(b.name); }
                 return 0;
             });
@@ -841,73 +826,47 @@
         };
 
         window.refreshAllViews = function() { 
-            try { 
-                filterItems(); 
-                filterStockItems(); 
-                filterOrderItems(); 
-                filterSuppliers(); 
-                filterHistoryItems(); 
-                updateCartBadge();
-                updateHistoryBadge();
-                updateBugBadgesAndAdminList();
-            } catch(e){} 
+            try { filterItems(); filterStockItems(); filterOrderItems(); filterSuppliers(); filterHistoryItems(); updateCartBadge(); updateHistoryBadge(); updateBugBadgesAndAdminList(); } catch(e){} 
         };
 
+        // BADGES E UI
         window.updateCartBadge = function() {
             const activeItemsCount = window.inventoryData.filter(i => window.getOrderQty(i) > 0).length;
             const badge = document.getElementById('cart-badge-drawer');
-            if (badge) {
-                if (activeItemsCount > 0) {
-                    badge.innerText = `${activeItemsCount} da ordinare`;
-                    badge.style.display = 'inline-block';
-                } else {
-                    badge.style.display = 'none';
-                }
-            }
+            if (badge) { badge.innerText = `${activeItemsCount} da ordinare`; badge.style.display = activeItemsCount > 0 ? 'inline-block' : 'none'; }
         };
 
         window.updateHistoryBadge = function() {
-            const uncheckedCount = Array.isArray(window.orderHistoryData) ? window.orderHistoryData.filter(h => !h.checked).length : 0;
+            const activeLocShort = window.activeLocation ? window.activeLocation.split(' ')[0] : '';
+            const uncheckedCount = Array.isArray(window.orderHistoryData) 
+                ? window.orderHistoryData.filter(h => !h.checked && (h.destination && h.destination.includes(activeLocShort))).length 
+                : 0;
             const badge = document.getElementById('history-badge-drawer');
-            if (badge) {
-                if (uncheckedCount > 0) {
-                    badge.innerText = uncheckedCount;
-                    badge.style.display = 'inline-block';
-                } else {
-                    badge.style.display = 'none';
-                }
-            }
+            if (badge) { badge.innerText = uncheckedCount; badge.style.display = uncheckedCount > 0 ? 'inline-block' : 'none'; }
         };
 
         window.updateBugBadgesAndAdminList = function() {
             const unresolvedCount = Array.isArray(window.bugReportsData) ? window.bugReportsData.filter(b => !b.resolved).length : 0;
             const settingsBadge = document.getElementById('bug-badge-settings');
-            
-            if (settingsBadge) {
-                if (unresolvedCount > 0) { settingsBadge.innerText = unresolvedCount; settingsBadge.style.display = 'inline-block'; }
-                else { settingsBadge.style.display = 'none'; }
-            }
+            if (settingsBadge) { settingsBadge.innerText = unresolvedCount; settingsBadge.style.display = unresolvedCount > 0 ? 'inline-block' : 'none'; }
 
             const container = document.getElementById('admin-bug-reports-container');
             if (container) {
                 if (!window.bugReportsData || window.bugReportsData.length === 0) {
-                    container.innerHTML = '<div style="font-size:12px; color:#666; text-align:center; padding:8px;">Nessuna segnalazione nello storico.</div>';
+                    container.innerHTML = '<div style="font-size:12px; color:#666; text-align:center; padding:8px;">Nessuna segnalazione.</div>';
                 } else {
                     container.innerHTML = '';
                     window.bugReportsData.forEach((b, idx) => {
                         const isResolved = b.resolved === true;
                         const bgStyle = isResolved ? 'background:#f1f5f9; opacity:0.85;' : 'background:white;';
                         const statusLabel = isResolved ? '<span style="color:#2e7d32; font-weight:bold;">✅ Risolto</span>' : '<span style="color:#d97706; font-weight:bold;">⏳ Da Gestire</span>';
-                        
                         container.innerHTML += `
                             <div style="${bgStyle} border:1px solid #e2e8f0; padding:8px; border-radius:6px; font-size:12px; display:flex; flex-direction:column; gap:4px;">
                                 <div style="display:flex; justify-content:space-between; font-weight:bold; color:var(--primary);">
-                                    <span>${b.type || '🐛 Bug'} - 👤 ${b.operator}</span>
-                                    <span>${statusLabel}</span>
+                                    <span>${b.type || '🐛 Bug'} - 👤 ${b.operator}</span><span>${statusLabel}</span>
                                 </div>
                                 <div style="display:flex; justify-content:between; color:#666; font-size:11px;">
-                                    <span><b>Sede:</b> ${b.location || 'N/D'}</span>
-                                    <span>${b.timestamp || ''}</span>
+                                    <span><b>Sede:</b> ${b.location || 'N/D'}</span><span>${b.timestamp || ''}</span>
                                 </div>
                                 <div style="color:#1e293b; background:#fff; padding:4px 6px; border-radius:4px; border:1px solid #f1f5f9;">${b.description}</div>
                                 <div style="display:flex; justify-content:flex-end; gap:6px; margin-top:4px;">
@@ -920,19 +879,25 @@
             }
         };
 
-        // 1. SCORTE
-        window.updateStock = function(id, d) { 
+        // 1. SCORTE (AGGIORNAMENTI ATOMICI)
+        window.updateStock = async function(id, d) { 
             const opName = document.getElementById('stock-operator-name')?.value.trim();
-            if (!opName) { window.showAlert("✍️ Inserisci prima la Firma / Nome dell'Operatore!"); document.getElementById('stock-operator-name')?.focus(); return; }
+            if (!opName) return window.showAlert("✍️ Inserisci prima la Firma Operatore!");
             const i = window.inventoryData.find(x => x.id === id); 
-            if(i) { window.setQty(i, Math.max(0, window.getQty(i) + d)); window.setLastUpdate(i, opName); saveDataToCloud(); filterStockItems(); } 
+            if(i) { 
+                const newQty = Math.max(0, window.getQty(i) + d);
+                await updateDoc(doc(db, "inventory", String(id)), window.getStockUpdatesObj(newQty, opName)); 
+            } 
         };
 
-        window.setStock = function(id, v) { 
+        window.setStock = async function(id, v) { 
             const opName = document.getElementById('stock-operator-name')?.value.trim();
-            if (!opName) { window.showAlert("✍️ Inserisci prima la Firma / Nome dell'Operatore!"); document.getElementById('stock-operator-name')?.focus(); return; }
+            if (!opName) return window.showAlert("✍ Inserisci prima la Firma Operatore!");
             const i = window.inventoryData.find(x => x.id === id); 
-            if(i) { window.setQty(i, Math.max(0, parseFloat(v) || 0)); window.setLastUpdate(i, opName); saveDataToCloud(); filterStockItems(); } 
+            if(i) { 
+                const newQty = Math.max(0, parseFloat(v) || 0);
+                await updateDoc(doc(db, "inventory", String(id)), window.getStockUpdatesObj(newQty, opName)); 
+            } 
         };
 
         window.filterStockItems = function() {
@@ -942,30 +907,24 @@
             const sortMode = document.getElementById('sort-stock-select')?.value || 'name-asc';
 
             let filtered = window.inventoryData.filter(i => {
-                const matchesQ = i.name.toLowerCase().includes(q);
                 const matchesCat = !cat ? true : (cat === 'FAVORITES' ? i.isFavorite === true : i.category === cat);
-                const matchesSup = !sup || String(i.supplierId) === String(sup);
-                return matchesQ && matchesCat && matchesSup;
+                return i.name.toLowerCase().includes(q) && matchesCat && (!sup || String(i.supplierId) === String(sup));
             });
             filtered = window.sortStockItemsArray(filtered, sortMode);
-            renderStockList(filtered);
-        };
-
-        window.renderStockList = function(items) {
+            
             const c = document.getElementById('stock-list'); c.innerHTML = '';
-            items.forEach(item => {
+            filtered.forEach(item => {
                 const sup = window.suppliersData.find(s => String(s.id) === String(item.supplierId));
                 const qty = window.getQty(item), min = window.getMin(item), isLow = qty < min;
-                const catEmoji = window.getCategoryEmoji(item.category);
                 const lastBy = window.getLastUpdateBy(item), lastDate = window.getLastUpdateDate(item);
-                const lastUpdate = lastDate ? `🕒 ${lastDate} (${lastBy || 'N/D'})` : '🕒 Non ancora aggiornato';
+                const lastUpdate = lastDate ? `🕒 ${lastDate} (${lastBy || 'N/D'})` : '🕒 Non aggiornato';
 
                 c.innerHTML += `
                     <div class="card-item ${isLow ? 'low-stock-alert' : ''}">
                         <div class="item-name-box" style="border-left-color:${sup?.color || '#334155'};">
                             <div class="item-name"><span>${item.isFavorite ? '⭐ ' : ''}${item.name}</span></div>
                             <div class="item-subtext" style="font-size:11px; color:#555;">${lastUpdate}</div>
-                            <div class="badges-row"><span class="category-label-tag">${catEmoji} ${item.category}</span><span class="supplier-badge" style="background:${sup?.color || '#334155'}">${sup?.name || 'N/D'}</span></div>
+                            <div class="badges-row"><span class="category-label-tag">${window.getCategoryEmoji(item.category)} ${item.category}</span><span class="supplier-badge" style="background:${sup?.color || '#334155'}">${sup?.name || 'N/D'}</span></div>
                         </div>
                         <div class="item-controls">
                             <div class="stock-label-box"><span class="stock-label-main">Giacenza</span><span class="stock-label-sub" style="color:${isLow?'var(--danger)':'#666'};">(Min: ${min})</span></div>
@@ -986,33 +945,26 @@
             const sortMode = document.getElementById('sort-order-select')?.value || 'name-asc';
 
             let filtered = window.inventoryData.filter(i => {
-                const matchesQ = i.name.toLowerCase().includes(q);
                 const matchesCat = !cat ? true : (cat === 'FAVORITES' ? i.isFavorite === true : i.category === cat);
-                const matchesSup = !sup || String(i.supplierId) === String(sup);
-                return matchesQ && matchesCat && matchesSup;
+                return i.name.toLowerCase().includes(q) && matchesCat && (!sup || String(i.supplierId) === String(sup));
             });
             filtered = window.sortItemsArray(filtered, sortMode);
-            renderOrderList(filtered);
-        };
-
-        window.renderOrderList = function(items) {
+            
             const c = document.getElementById('order-list'); c.innerHTML = '';
-            items.forEach(item => {
+            filtered.forEach(item => {
                 const sup = window.suppliersData.find(s => String(s.id) === String(item.supplierId));
                 const qty = window.getQty(item), min = window.getMin(item), isLow = qty < min;
-                const orderQty = window.getOrderQty(item);
-                const catEmoji = window.getCategoryEmoji(item.category);
                 c.innerHTML += `
                     <div class="card-item ${isLow ? 'low-stock-alert' : ''}">
                         <div class="item-name-box" style="border-left-color:${sup?.color || '#334155'};">
                             <div class="item-name"><span>${item.isFavorite ? '⭐ ' : ''}${item.name}</span></div>
                             <div class="stock-warning-badge ${isLow?'alert':'normal'}">Scorta: ${qty} ${item.unit} (Min: ${min})</div>
-                            <div class="badges-row"><span class="category-label-tag">${catEmoji} ${item.category}</span><span class="supplier-badge" style="background:${sup?.color || '#334155'}">${sup?.name || 'N/D'}</span></div>
+                            <div class="badges-row"><span class="category-label-tag">${window.getCategoryEmoji(item.category)} ${item.category}</span><span class="supplier-badge" style="background:${sup?.color || '#334155'}">${sup?.name || 'N/D'}</span></div>
                         </div>
                         <div class="item-controls">
                             <span style="font-size:13px; font-weight:600; margin-right:auto;">Da Ordinare:</span>
                             <button class="qty-btn" onclick="updateOrder(${item.id}, -1)">-</button>
-                            <input type="number" class="qty-input" value="${orderQty}" onchange="setOrder(${item.id}, this.value)">
+                            <input type="number" class="qty-input" value="${window.getOrderQty(item)}" onchange="setOrder(${item.id}, this.value)">
                             <span class="unit-label">${item.unit}</span>
                             <button class="qty-btn" onclick="updateOrder(${item.id}, 1)">+</button>
                         </div>
@@ -1020,32 +972,27 @@
             });
         };
 
-        window.updateOrder = function(id, d) { 
+        window.updateOrder = async function(id, d) { 
             const i = window.inventoryData.find(x => x.id === id); 
             if(i) { 
-                const curr = window.getOrderQty(i);
-                window.setOrderQty(i, Math.max(0, curr + d)); 
-                saveDataToCloud(); 
-                filterOrderItems(); 
-                updateCartBadge();
+                const field = window.getLocationKey() === 'ostermalm' ? 'orderQty_ostermalm' : 'orderQty_vasastan';
+                await updateDoc(doc(db, "inventory", String(id)), { [field]: Math.max(0, window.getOrderQty(i) + d) }); 
+            } 
+        };
+        window.setOrder = async function(id, v) { 
+            const i = window.inventoryData.find(x => x.id === id); 
+            if(i) { 
+                const field = window.getLocationKey() === 'ostermalm' ? 'orderQty_ostermalm' : 'orderQty_vasastan';
+                await updateDoc(doc(db, "inventory", String(id)), { [field]: Math.max(0, parseFloat(v) || 0) }); 
             } 
         };
 
-        window.setOrder = function(id, v) { 
-            const i = window.inventoryData.find(x => x.id === id); 
-            if(i) { 
-                window.setOrderQty(i, Math.max(0, parseFloat(v) || 0)); 
-                saveDataToCloud(); 
-                updateCartBadge();
-            } 
-        };
-
+        // GENERAZIONE E SALVATAGGIO ORDINE (BATCH)
         window.generateOrderSummary = function() {
             const op = document.getElementById('order-operator-name').value.trim();
             if (!op) return window.showAlert("👤 Inserisci il nome dell'operatore.");
             const dateVal = document.getElementById('order-date-picker').value;
-            const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-            if (!dateVal || dateVal < tomorrowStr) return window.showAlert("🚚 La data di consegna deve essere da domani in poi.");
+            if (!dateVal) return window.showAlert("🚚 Seleziona una data di consegna.");
 
             const items = window.inventoryData.filter(i => window.getOrderQty(i) > 0);
             if (items.length === 0) return window.showAlert("🛒 Nessun prodotto selezionato.");
@@ -1059,110 +1006,91 @@
             const items = window.inventoryData.filter(i => window.getOrderQty(i) > 0);
             let groups = {};
             items.forEach(i => { if(!groups[i.supplierId]) groups[i.supplierId] = []; groups[i.supplierId].push(i); });
-            const c = document.getElementById('summary-content'); c.innerHTML = '';
             
-            const rawLoc = window.activeLocation || 'Magari';
-            const locNameClean = rawLoc.split(' ')[0].toUpperCase();
-            const todayFormatted = new Date().toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            const c = document.getElementById('summary-content'); c.innerHTML = '';
+            const locNameClean = (window.activeLocation || 'Magari').split(' ')[0].toUpperCase();
+            const todayFormatted = new Date().toLocaleDateString('it-IT');
 
             for (let sId in groups) {
                 const sup = window.suppliersData.find(s => String(s.id) === String(sId));
                 const supName = sup?.name || 'Fornitore';
-                
                 const emailSubject = `Beställning Magari ${locNameClean} - ${todayFormatted} (Leverans: ${dateVal})`;
                 
-                let emailBody = `BESTÄLLNING MAGARI - ${locNameClean}\n`;
-                emailBody += `========================================\n`;
-                emailBody += `👤 BESTÄLLARE: ${op.toUpperCase()}\n`;
-                emailBody += `🚚 ÖNSKAT LEVERANSDATUM: ${dateVal}\n\n`;
-                emailBody += `Ciao ${supName},\n\n`;
-                emailBody += `PRODUKTER:\n`;
-                
-                groups[sId].forEach(p => { 
-                    const qty = window.getOrderQty(p);
-                    emailBody += `• ${p.name.toUpperCase()} -> ${qty} ${window.translateUnitToSwedish(p.unit).toUpperCase()}\n`; 
-                });
-                
-                emailBody += `\nMed vänliga hälsningar,\nMagari ${window.activeLocation ? window.activeLocation.split(' ')[0] : 'Magari'}`;
-
-                const mailtoLink = `mailto:${sup?.email || ''}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
-                
+                let emailBody = `BESTÄLLNING MAGARI - ${locNameClean}\n========================================\n👤 BESTÄLLARE: ${op.toUpperCase()}\n🚚 ÖNSKAT LEVERANSDATUM: ${dateVal}\n\nCiao ${supName},\n\nPRODUKTER:\n`;
                 let waTxt = `*BESTÄLLNING MAGARI - ${locNameClean}*\n👤 Beställare: *${op.toUpperCase()}*\n🚚 Önskat leveransdatum: *${dateVal}*\n\nCiao ${supName},\n\n*PRODUKTER:*\n`;
-                groups[sId].forEach(p => { 
-                    const qty = window.getOrderQty(p);
-                    waTxt += `• *${p.name.toUpperCase()}*  ->  *${qty} ${window.translateUnitToSwedish(p.unit).toUpperCase()}*\n`; 
-                });
-                waTxt += `\nMed vänliga hälsningar,\nMagari`;
                 
-                const cleanPhone = (sup?.phone || '').replace(/[^0-9]/g,'');
-                const wa = `whatsapp://send?phone=${cleanPhone}&text=${encodeURIComponent(waTxt)}`;
-
-                let itemsListHtml = groups[sId].map(p => `• <b>${p.name.toUpperCase()}</b>  ->  <span style="color:var(--primary);">${window.getOrderQty(p)} ${window.translateUnitToSwedish(p.unit).toUpperCase()}</span>`).join('<br>');
+                groups[sId].forEach(p => { 
+                    const q = window.getOrderQty(p), u = window.translateUnitToSwedish(p.unit).toUpperCase();
+                    emailBody += `• ${p.name.toUpperCase()} -> ${q} ${u}\n`; 
+                    waTxt += `• *${p.name.toUpperCase()}*  ->  *${q} ${u}*\n`; 
+                });
+                emailBody += `\nMed vänliga hälsningar,\nMagari`; waTxt += `\nMed vänliga hälsningar,\nMagari`;
+                
+                const wa = `whatsapp://send?phone=${(sup?.phone || '').replace(/[^0-9]/g,'')}&text=${encodeURIComponent(waTxt)}`;
+                const itemsListHtml = groups[sId].map(p => `• <b>${p.name.toUpperCase()}</b>  ->  <span style="color:var(--primary);">${window.getOrderQty(p)} ${window.translateUnitToSwedish(p.unit).toUpperCase()}</span>`).join('<br>');
 
                 c.innerHTML += `
                     <div style="background:#f9f9f9; padding:16px; border-radius:10px; margin-bottom:16px; border:1px solid #cbd5e1;">
                         <div style="font-weight:800; color:var(--primary); font-size:18px; margin-bottom:8px;">🚚 ${supName}</div>
-                        <div style="font-size:13px; margin-bottom:12px; color:#555;"><b>Oggetto Email:</b> ${emailSubject}</div>
                         <div style="margin:12px 0; background:#fff; padding:10px; border-radius:6px; border:1px solid #e2e8f0;">${itemsListHtml}</div>
                         <a href="${wa}" style="background:var(--whatsapp); color:white; padding:12px; display:block; text-align:center; border-radius:8px; text-decoration:none; font-weight:bold; margin-bottom:6px;">💬 Invia via WhatsApp</a>
-                        <a href="${mailtoLink}" style="background:#2563eb; color:white; padding:12px; display:block; text-align:center; border-radius:8px; text-decoration:none; font-weight:bold; margin-bottom:6px;">✉️ Invia via Email</a>
+                        <a href="mailto:${sup?.email||''}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}" style="background:#2563eb; color:white; padding:12px; display:block; text-align:center; border-radius:8px; text-decoration:none; font-weight:bold; margin-bottom:6px;">✉️ Invia via Email</a>
                         <button onclick="confirmSingleSupplierOrder('${sId}', '${op}', '${dateVal}')" class="btn-save" style="width:100%; background:#1b5e20;">✅ Conferma Ordine per ${supName}</button>
                     </div>`;
             }
             c.innerHTML += `<button onclick="confirmAndSaveOrderToHistory('${op}')" class="btn-save" style="width:100%; padding:14px; background:#043927;">✅ Conferma TUTTI gli Ordini</button>`;
         };
 
-        window.confirmSingleSupplierOrder = function(sId, operator, dateVal) {
+        window.confirmSingleSupplierOrder = async function(sId, operator, dateVal) {
             const items = window.inventoryData.filter(i => String(i.supplierId) === String(sId) && window.getOrderQty(i) > 0);
             if (items.length === 0) return;
             const sup = window.suppliersData.find(s => String(s.id) === String(sId));
             const nowStr = new Date().toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            const entryId = Date.now() + Math.random();
 
-            window.orderHistoryData.unshift({
-                id: Date.now() + Math.random(),
-                timestamp: nowStr,
-                destination: window.activeLocation || 'Sede Non Specifica',
-                operatorName: operator,
-                supplierName: sup?.name || 'Fornitore',
+            const batch = writeBatch(db);
+            batch.set(doc(db, "history", String(entryId)), {
+                id: entryId, timestamp: nowStr, destination: window.activeLocation || 'Sede Non Specifica',
+                operatorName: operator, supplierName: sup?.name || 'Fornitore',
                 items: items.map(i => ({ id: i.id, name: i.name, qty: window.getOrderQty(i), unit: i.unit })),
-                checked: false,
-                verificationDetails: null
+                checked: false, verificationDetails: null
             });
 
-            items.forEach(i => window.setOrderQty(i, 0));
-            saveDataToCloud(); refreshAllViews(); closeSummaryModal();
-            window.showAlert("✅ Ordine salvato nello storico!");
+            const field = window.getLocationKey() === 'ostermalm' ? 'orderQty_ostermalm' : 'orderQty_vasastan';
+            items.forEach(i => batch.update(doc(db, "inventory", String(i.id)), { [field]: 0 }));
+            
+            await batch.commit();
+            closeSummaryModal(); window.showAlert("✅ Ordine salvato nello storico!");
         };
 
-        window.confirmAndSaveOrderToHistory = function(operator) {
+        window.confirmAndSaveOrderToHistory = async function(operator) {
             const items = window.inventoryData.filter(i => window.getOrderQty(i) > 0);
             if (items.length === 0) return;
-            let groups = {};
-            items.forEach(i => { if(!groups[i.supplierId]) groups[i.supplierId] = []; groups[i.supplierId].push(i); });
+            let groups = {}; items.forEach(i => { if(!groups[i.supplierId]) groups[i.supplierId] = []; groups[i.supplierId].push(i); });
             const nowStr = new Date().toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
+            const batch = writeBatch(db);
             for (let sId in groups) {
                 const sup = window.suppliersData.find(s => String(s.id) === String(sId));
-                window.orderHistoryData.unshift({
-                    id: Date.now() + Math.random(),
-                    timestamp: nowStr,
-                    destination: window.activeLocation || 'Sede Non Specifica',
-                    operatorName: operator,
-                    supplierName: sup?.name || 'Fornitore',
+                const entryId = Date.now() + Math.random();
+                batch.set(doc(db, "history", String(entryId)), {
+                    id: entryId, timestamp: nowStr, destination: window.activeLocation || 'Sede Non Specifica',
+                    operatorName: operator, supplierName: sup?.name || 'Fornitore',
                     items: groups[sId].map(i => ({ id: i.id, name: i.name, qty: window.getOrderQty(i), unit: i.unit })),
-                    checked: false,
-                    verificationDetails: null
+                    checked: false, verificationDetails: null
                 });
             }
 
-            window.inventoryData.forEach(i => window.setOrderQty(i, 0));
-            saveDataToCloud(); refreshAllViews(); closeSummaryModal();
-            window.showAlert("🎉 Ordini salvati nello storico!");
+            const field = window.getLocationKey() === 'ostermalm' ? 'orderQty_ostermalm' : 'orderQty_vasastan';
+            items.forEach(i => batch.update(doc(db, "inventory", String(i.id)), { [field]: 0 }));
+            
+            await batch.commit();
+            closeSummaryModal(); window.showAlert("🎉 Ordini salvati nello storico!");
         };
 
-        window.closeSummaryModal = function() { document.getElementById('summary-modal').classList.remove('active'); document.getElementById('overlay').classList.remove('active'); };
+        window.closeSummaryModal = () => { document.getElementById('summary-modal').classList.remove('active'); document.getElementById('overlay').classList.remove('active'); };
 
-        // 3. STORICO E VERIFICA CON STORNO QUANTITÀ ALLE GIACENZE
+        // 3. STORICO E VERIFICA (STORNO ATOMICO)
         window.openVerifyDeliveryModal = function(historyId) {
             window.activeVerifyHistoryId = historyId;
             const entry = window.orderHistoryData.find(x => x.id === historyId);
@@ -1170,12 +1098,11 @@
 
             const container = document.getElementById('verify-items-checklist-container');
             container.innerHTML = '';
-
             entry.items.forEach((it, idx) => {
                 container.innerHTML += `
                     <div style="background:white; padding:8px 10px; border-radius:6px; border:1px solid #cbd5e1; display:flex; flex-direction:column; gap:4px;">
                         <div style="font-weight:bold; font-size:13px; color:#1e293b;">• ${it.name}</div>
-                        <div style="display:flex; align-items:center; justify-content:space-between; font-size:12px; color:#555;">
+                        <div style="display:flex; justify-content:space-between; font-size:12px; color:#555;">
                             <span>Ordinato: <b>${it.qty} ${it.unit}</b></span>
                             <div style="display:flex; align-items:center; gap:6px;">
                                 <label style="font-size:11px; font-weight:600;">Ricevuti:</label>
@@ -1185,84 +1112,60 @@
                         </div>
                     </div>`;
             });
-
             document.getElementById('verify-operator-input').value = '';
             document.getElementById('verify-note-input').value = '';
             document.getElementById('verify-delivery-modal').classList.add('active');
             document.getElementById('overlay').classList.add('active');
         };
 
-        window.closeVerifyDeliveryModal = function() {
-            document.getElementById('verify-delivery-modal').classList.remove('active');
-            document.getElementById('overlay').classList.remove('active');
-            window.activeVerifyHistoryId = null;
-        };
+        window.closeVerifyDeliveryModal = () => { document.getElementById('verify-delivery-modal').classList.remove('active'); document.getElementById('overlay').classList.remove('active'); window.activeVerifyHistoryId = null; };
 
-        window.submitDeliveryVerification = function() {
+        window.submitDeliveryVerification = async function() {
             const opName = document.getElementById('verify-operator-input').value.trim();
-            if (!opName) return window.showAlert("✍️ Inserisci il tuo nome o firma per procedere.");
+            if (!opName) return window.showAlert("✍️ Inserisci il tuo nome o firma.");
             const customNote = document.getElementById('verify-note-input').value.trim();
-
             const entry = window.orderHistoryData.find(x => x.id === window.activeVerifyHistoryId);
             if (!entry) return;
 
-            let discrepancies = [];
+            let discrepancies = customNote ? [customNote] : [];
+            const batch = writeBatch(db);
             
             entry.items.forEach((it, idx) => {
                 const receivedInput = document.getElementById(`verify-item-qty-${idx}`);
                 const receivedQty = receivedInput ? parseFloat(receivedInput.value) || 0 : it.qty;
-                
-                if (receivedQty !== it.qty) {
-                    discrepancies.push(`${it.name}: attesi ${it.qty} ${it.unit}, ricevuti ${receivedQty} ${it.unit}`);
-                }
+                if (receivedQty !== it.qty) discrepancies.push(`${it.name}: attesi ${it.qty}, ricevuti ${receivedQty}`);
 
                 if (receivedQty > 0) {
-                    let invItem = null;
-                    if (it.id) {
-                        invItem = window.inventoryData.find(x => x.id === it.id);
-                    }
-                    if (!invItem) {
-                        invItem = window.inventoryData.find(x => x.name.toLowerCase() === it.name.toLowerCase());
-                    }
+                    let invItem = window.inventoryData.find(x => x.id === it.id || x.name.toLowerCase() === it.name.toLowerCase());
                     if (invItem) {
-                        const currentStock = window.getQty(invItem);
-                        window.setQty(invItem, currentStock + receivedQty);
-                        window.setLastUpdate(invItem, opName);
+                        const newQty = window.getQty(invItem) + receivedQty;
+                        batch.update(doc(db, "inventory", String(invItem.id)), window.getStockUpdatesObj(newQty, opName));
                     }
                 }
             });
 
-            if (customNote) {
-                discrepancies.unshift(customNote);
-            }
-
             const nowStr = new Date().toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-            entry.checked = true;
-            entry.checkedBy = opName;
-            entry.checkedAt = nowStr;
-            entry.verificationDetails = discrepancies.length > 0 ? discrepancies.join(' | ') : "Merce completa al 100%";
+            batch.update(doc(db, "history", String(entry.id)), {
+                checked: true, checkedBy: opName, checkedAt: nowStr,
+                verificationDetails: discrepancies.length > 0 ? discrepancies.join(' | ') : "Merce completa al 100%"
+            });
 
-            saveDataToCloud();
-            refreshAllViews();
-            closeVerifyDeliveryModal();
-            window.showAlert("✅ Merce verificata, stornata e aggiunta alle giacenze!");
+            await batch.commit();
+            closeVerifyDeliveryModal(); window.showAlert("✅ Merce verificata, stornata e aggiunta alle giacenze!");
         };
 
         window.filterHistoryItems = function() {
             const c = document.getElementById('history-list'); c.innerHTML = '';
-            const filterLoc = document.getElementById('filter-history-location')?.value || 'active';
             const query = (document.getElementById('search-history-input')?.value || '').toLowerCase();
+            const activeLocShort = window.activeLocation ? window.activeLocation.split(' ')[0] : '';
 
             const filtered = window.orderHistoryData.filter(h => {
                 const matchesQuery = (h.supplierName || '').toLowerCase().includes(query) || (h.operatorName || '').toLowerCase().includes(query);
-                const matchesLoc = filterLoc === 'all' || (h.destination && window.activeLocation && h.destination.includes(window.activeLocation.split(' ')[0]));
+                const matchesLoc = h.destination && h.destination.includes(activeLocShort);
                 return matchesQuery && matchesLoc;
             });
 
-            if (filtered.length === 0) {
-                c.innerHTML = '<div class="empty-placeholder" style="padding:16px; text-align:center; color:#666;">Nessun ordine nello storico.</div>';
-                return;
-            }
+            if (filtered.length === 0) return c.innerHTML = '<div style="padding:16px; text-align:center; color:#666;">Nessun ordine nello storico per questa sede.</div>';
 
             filtered.forEach((h, idx) => {
                 let itemsHtml = Array.isArray(h.items) ? h.items.map(it => `• ${it.name}: <b>${it.qty} ${it.unit}</b>`).join('<br>') : '';
@@ -1272,59 +1175,55 @@
                 if (!isChecked) {
                     checkStatusHtml = `
                         <div style="background:#fff3f0; border:1px solid #ffcdd2; padding:8px; border-radius:6px; font-size:12px; color:#c62828; margin-top:8px; display:flex; justify-content:space-between; align-items:center;">
-                            <span>⚠️ <b>Da Controllare alla Consegna</b></span>
-                            <button class="btn-save" style="padding:6px 10px; font-size:11px; background:#c62828;" onclick="openVerifyDeliveryModal(${h.id})">✍️ Verifica & Storna</button>
+                            <span>⚠️ <b>Da Controllare</b></span><button class="btn-save" style="padding:6px 10px; font-size:11px; background:#c62828;" onclick="openVerifyDeliveryModal(${h.id})">✍️ Verifica & Storna</button>
                         </div>`;
                 } else if (h.verificationDetails && !h.verificationDetails.includes("100%")) {
-                    checkStatusHtml = `
-                        <div style="background:#fff8e1; border:1px solid #ffe0b2; padding:8px; border-radius:6px; font-size:12px; color:#b45309; margin-top:8px;">
-                            ⚠️ <b>Verificato con Discrepanze & Stornato</b><br>
-                            Firmato da: <b>${h.checkedBy || 'Operatore'}</b> (${h.checkedAt})<br>
-                            <span style="color:#d97706; font-weight:bold;">Segnalazioni:</span> ${h.verificationDetails}
-                        </div>`;
+                    checkStatusHtml = `<div style="background:#fff8e1; border:1px solid #ffe0b2; padding:8px; border-radius:6px; font-size:12px; color:#b45309; margin-top:8px;">⚠️ <b>Discrepanze:</b> ${h.verificationDetails}</div>`;
                 } else {
-                    checkStatusHtml = `
-                        <div style="background:#e8f5e9; border:1px solid #c8e6c9; padding:8px; border-radius:6px; font-size:12px; color:#2e7d32; margin-top:8px;">
-                            ✅ <b>Merce Controllata, Completa & Stornata</b><br>
-                            Firmato da: <b>${h.checkedBy || 'Operatore'}</b> in data ${h.checkedAt}
-                        </div>`;
+                    checkStatusHtml = `<div style="background:#e8f5e9; border:1px solid #c8e6c9; padding:8px; border-radius:6px; font-size:12px; color:#2e7d32; margin-top:8px;">✅ <b>Completo</b> (${h.checkedBy} - ${h.checkedAt})</div>`;
                 }
-
-                const borderColor = !isChecked ? '#e53935' : ((h.verificationDetails && !h.verificationDetails.includes("100%")) ? '#ffb300' : '#2e7d32');
-
+                
                 c.innerHTML += `
-                    <div class="history-card" style="border-left: 4px solid ${borderColor};">
+                    <div class="history-card" style="border-left: 4px solid ${!isChecked ? '#e53935' : (h.verificationDetails && !h.verificationDetails.includes("100%") ? '#ffb300' : '#2e7d32')};">
                         <div class="history-header"><span>🕒 ${h.timestamp}</span><span>📍 ${h.destination}</span></div>
                         <div style="font-weight:bold; font-size:14px; margin-bottom:4px;">🚚 ${h.supplierName} <span style="font-size:12px; font-weight:normal; color:#666;">(👤 ${h.operatorName})</span></div>
-                        ${itemsHtml ? `<div style="font-size:12px; color:#333; margin-top:6px; background:#f8fafc; padding:6px; border-radius:4px;">${itemsHtml}</div>` : ''}
+                        ${itemsHtml ? `<div style="font-size:12px; margin-top:6px; background:#f8fafc; padding:6px; border-radius:4px;">${itemsHtml}</div>` : ''}
                         ${checkStatusHtml}
                         <div style="margin-top:8px; text-align:right;"><button class="btn-action-del" onclick="requestPinAction('delete_single_history', ${idx})">🗑️ Elimina</button></div>
                     </div>`;
             });
         };
 
-        // 4. MAGAZZINO
+        // 4. MAGAZZINO ED EDITOR
+        window.toggleFavorite = async function(itemId) {
+            const item = window.inventoryData.find(x => x.id === itemId);
+            if (item) {
+                await updateDoc(doc(db, "inventory", String(itemId)), { isFavorite: !item.isFavorite });
+                window.showAlert(!item.isFavorite ? `⭐ ${item.name} aggiunto ai Preferiti!` : `☆ ${item.name} rimosso dai Preferiti.`);
+            }
+        };
+
         window.filterItems = function() {
             const q = (document.getElementById('search-input')?.value || '').toLowerCase();
             const cat = document.getElementById('filter-inventory-category')?.value || '';
             const sup = document.getElementById('filter-inventory-supplier')?.value || '';
             const c = document.getElementById('inventory-list'); c.innerHTML = '';
 
-            let items = window.inventoryData.filter(i => {
-                const matchesQ = i.name.toLowerCase().includes(q);
-                const matchesCat = !cat ? true : (cat === 'FAVORITES' ? i.isFavorite === true : i.category === cat);
-                const matchesSup = !sup || String(i.supplierId) === String(sup);
-                return matchesQ && matchesCat && matchesSup;
-            });
-            items.sort((a, b) => a.name.localeCompare(b.name));
-
-            items.forEach(item => {
+            window.inventoryData.filter(i => {
+                return i.name.toLowerCase().includes(q) && (!cat || (cat === 'FAVORITES' ? i.isFavorite : i.category === cat)) && (!sup || String(i.supplierId) === String(sup));
+            }).sort((a, b) => a.name.localeCompare(b.name)).forEach(item => {
                 const supObj = window.suppliersData.find(s => String(s.id) === String(item.supplierId));
+                const minVas = (item.minQty_vasastan !== undefined && item.minQty_vasastan !== null) ? item.minQty_vasastan : (item.minQty ?? 2);
+                const minOst = (item.minQty_ostermalm !== undefined && item.minQty_ostermalm !== null) ? item.minQty_ostermalm : 2;
+
                 c.innerHTML += `
                     <div class="card-item">
                         <div class="item-name-box" style="border-left-color:${supObj?.color || '#334155'};">
                             <div class="item-name"><span>${item.name}</span><button class="star-toggle-btn" onclick="toggleFavorite(${item.id})">${item.isFavorite ? '⭐' : '☆'}</button></div>
                             <div class="item-subtext">Prezzo: ${item.price} SEK | Unità: ${item.unit}</div>
+                            <div class="item-subtext" style="font-weight: 600; color: var(--primary); margin-top: 4px;">
+                                📉 Min: Vasastan ${minVas} ${item.unit} | Östermalm ${minOst} ${item.unit}
+                            </div>
                         </div>
                         <div class="action-row-btn">
                             <button class="btn-action-edit" onclick="openAddModal(${item.id})">✏️ Modifica</button>
@@ -1335,46 +1234,78 @@
         };
 
         window.openAddModal = function(id = null) {
-            populateAllSupplierFilters();
-            document.getElementById('edit-item-id').value = '';
-            document.getElementById('new-name').value = '';
+            window.populateAllSupplierFilters();
+            document.getElementById('edit-item-id').value = ''; 
+            document.getElementById('new-name').value = ''; 
             document.getElementById('new-price').value = '0';
+            document.getElementById('new-min-vasastan').value = '2';
+            document.getElementById('new-min-ostermalm').value = '2';
+            
             if (id) {
                 const item = window.inventoryData.find(x => x.id === id);
                 if (item) {
-                    document.getElementById('edit-item-id').value = item.id;
+                    document.getElementById('edit-item-id').value = item.id; 
                     document.getElementById('new-name').value = item.name;
-                    document.getElementById('new-category-select').value = item.category;
+                    document.getElementById('new-category-select').value = item.category; 
                     document.getElementById('new-supplier-select').value = item.supplierId;
-                    document.getElementById('new-price').value = item.price || 0;
+                    document.getElementById('new-min-vasastan').value = (item.minQty_vasastan !== undefined && item.minQty_vasastan !== null) ? item.minQty_vasastan : (item.minQty ?? 2);
+                    document.getElementById('new-min-ostermalm').value = (item.minQty_ostermalm !== undefined && item.minQty_ostermalm !== null) ? item.minQty_ostermalm : 2;
+                    document.getElementById('new-price').value = item.price || 0; 
+                    document.getElementById('new-unit').value = item.unit || 'Bottiglie';
                 }
             }
-            document.getElementById('add-modal').classList.add('active');
+            document.getElementById('add-modal').classList.add('active'); 
             document.getElementById('overlay').classList.add('active');
         };
-        window.closeAddModal = function() { document.getElementById('add-modal').classList.remove('active'); document.getElementById('overlay').classList.remove('active'); };
+        window.closeAddModal = () => { document.getElementById('add-modal').classList.remove('active'); document.getElementById('overlay').classList.remove('active'); };
 
-        window.saveInventoryItem = function() {
+        window.saveInventoryItem = async function() {
             const idVal = document.getElementById('edit-item-id').value;
             const name = document.getElementById('new-name').value.trim();
             if (!name) return window.showAlert("⚠️ Inserisci il nome.");
+            
             const cat = document.getElementById('new-category-select').value;
             const supId = parseInt(document.getElementById('new-supplier-select').value);
             const price = parseFloat(document.getElementById('new-price').value) || 0;
             const unit = document.getElementById('new-unit').value;
+            
+            const valVas = parseFloat(document.getElementById('new-min-vasastan').value);
+            const minVasastan = isNaN(valVas) ? 2 : valVas;
+            
+            const valOst = parseFloat(document.getElementById('new-min-ostermalm').value);
+            const minOstermalm = isNaN(valOst) ? 2 : valOst;
 
             if (idVal) {
-                const item = window.inventoryData.find(x => x.id === parseInt(idVal));
-                if (item) { item.name = name; item.category = cat; item.supplierId = supId; item.price = price; item.unit = unit; }
+                await updateDoc(doc(db, "inventory", String(idVal)), { 
+                    name, 
+                    category: cat, 
+                    supplierId: supId, 
+                    price, 
+                    unit,
+                    minQty_vasastan: minVasastan,
+                    minQty_ostermalm: minOstermalm
+                });
             } else {
-                window.inventoryData.push({ id: Date.now(), name, category: cat, supplierId: supId, minQty_vasastan: 2, minQty_ostermalm: 2, orderQty_vasastan: 0, orderQty_ostermalm: 0, unit, price, qty_vasastan: 0, qty_ostermalm: 0, isFavorite: false });
+                const newId = Date.now();
+                await setDoc(doc(db, "inventory", String(newId)), { 
+                    id: newId, 
+                    name, 
+                    category: cat, 
+                    supplierId: supId, 
+                    minQty_vasastan: minVasastan, 
+                    minQty_ostermalm: minOstermalm, 
+                    orderQty_vasastan: 0, 
+                    orderQty_ostermalm: 0, 
+                    unit, 
+                    price, 
+                    qty_vasastan: 0, 
+                    qty_ostermalm: 0, 
+                    isFavorite: false 
+                });
             }
-            saveDataToCloud(); refreshAllViews(); closeAddModal();
+            closeAddModal(); window.showAlert("✅ Prodotto salvato!");
         };
-
-        window.deleteInventoryItem = function(id) {
-            if (confirm("Eliminare prodotto?")) { window.inventoryData = window.inventoryData.filter(x => x.id !== id); saveDataToCloud(); refreshAllViews(); }
-        };
+        window.deleteInventoryItem = async function(id) { if (confirm("Eliminare prodotto?")) await deleteDoc(doc(db, "inventory", String(id))); };
 
         // 5. FORNITORI
         window.filterSuppliers = function() {
@@ -1384,183 +1315,164 @@
                 c.innerHTML += `<div class="card-item"><div class="item-name-box" style="border-left-color:${s.color};"><div class="item-name" style="color:${s.color};">🚚 ${s.name}</div><div class="item-subtext">📞 ${s.phone || 'N/D'} | ✉️ ${s.email || 'N/D'}</div></div></div>`;
             });
         };
-
-        window.openAddSupplierModal = function() {
-            document.getElementById('edit-supplier-id').value = '';
-            document.getElementById('supp-name').value = '';
-            document.getElementById('supp-phone').value = '';
-            document.getElementById('supp-email').value = '';
-            document.getElementById('add-supplier-modal').classList.add('active');
-            document.getElementById('overlay').classList.add('active');
-        };
-        window.closeAddSupplierModal = function() { document.getElementById('add-supplier-modal').classList.remove('active'); document.getElementById('overlay').classList.remove('active'); };
-
-        window.saveSupplier = function() {
+        window.openAddSupplierModal = () => { document.getElementById('edit-supplier-id').value = ''; document.getElementById('supp-name').value = ''; document.getElementById('supp-phone').value = ''; document.getElementById('supp-email').value = ''; document.getElementById('add-supplier-modal').classList.add('active'); document.getElementById('overlay').classList.add('active'); };
+        window.closeAddSupplierModal = () => { document.getElementById('add-supplier-modal').classList.remove('active'); document.getElementById('overlay').classList.remove('active'); };
+        window.saveSupplier = async function() {
             const name = document.getElementById('supp-name').value.trim();
             if(!name) return window.showAlert("Inserisci il nome fornitore.");
-            window.suppliersData.push({ id: Date.now(), name, phone: document.getElementById('supp-phone').value, email: document.getElementById('supp-email').value, color: document.getElementById('supp-color-input').value });
-            saveDataToCloud(); refreshAllViews(); closeAddSupplierModal();
+            const newId = Date.now();
+            await setDoc(doc(db, "suppliers", String(newId)), { id: newId, name, phone: document.getElementById('supp-phone').value, email: document.getElementById('supp-email').value, color: document.getElementById('supp-color-input').value });
+            closeAddSupplierModal(); window.showAlert("✅ Fornitore salvato!");
         };
 
-        // 6. REPORT CONSUMI CON TOTALI PARZIALI E GRAN TOTALE
-        window.promptExportExcelModal = function() {
-            document.getElementById('export-excel-modal').classList.add('active');
-            document.getElementById('overlay').classList.add('active');
-        };
-        window.closeExportExcelModal = function() { document.getElementById('export-excel-modal').classList.remove('active'); document.getElementById('overlay').classList.remove('active'); };
-
+        // 6. REPORT ED EXPORT EXCEL AVANZATO
+        window.promptExportExcelModal = () => { document.getElementById('export-excel-modal').classList.add('active'); document.getElementById('overlay').classList.add('active'); };
+        window.closeExportExcelModal = () => { document.getElementById('export-excel-modal').classList.remove('active'); document.getElementById('overlay').classList.remove('active'); };
+        
         window.generateAndExportExcel = function() {
             const type = document.getElementById('export-type-select').value;
             const opName = document.getElementById('export-operator-name').value.trim() || 'N/D';
-            const rows = [["MAGARI INVENTORY REPORT"], ["Operator:", opName], [""], ["ITEM NAME", "CATEGORY", "SUPPLIER", "PRICE", "STOCK", "UNIT"]];
-            window.inventoryData.forEach(i => {
-                const sup = window.suppliersData.find(s => String(s.id) === String(i.supplierId))?.name || 'N/D';
-                rows.push([i.name, i.category, sup, i.price || 0, window.getQty(i), i.unit]);
-            });
-            const ws = XLSX.utils.aoa_to_sheet(rows);
+            const locName = window.activeLocation || 'Magari';
+            const todayStr = new Date().toLocaleDateString('it-IT');
+
+            const isAlcoholCategory = (cat) => (cat === 'Alcolici' || cat === 'Bevande');
+
+            const buildSheetData = (itemsList, titleHeader) => {
+                const rows = [
+                    [`MAGARI INVENTORY REPORT - ${titleHeader.toUpperCase()}`],
+                    [`Location: ${locName}`, `Date: ${todayStr}`, `Operator: ${opName}`],
+                    [""],
+                    ["ITEM NAME", "CATEGORY", "SUPPLIER", "PRICE (SEK)", "STOCK QTY", "TOTAL VALUE (SEK)", "UNIT"]
+                ];
+
+                let totalStockSum = 0;
+                let totalValueSum = 0;
+
+                itemsList.forEach(i => {
+                    const sup = window.suppliersData.find(s => String(s.id) === String(i.supplierId))?.name || 'N/D';
+                    const stock = window.getQty(i);
+                    const price = i.price || 0;
+                    const val = parseFloat((stock * price).toFixed(2));
+
+                    totalStockSum += stock;
+                    totalValueSum += val;
+
+                    rows.push([i.name, i.category, sup, price, stock, val, i.unit]);
+                });
+
+                // Riga di Totale con Somma
+                rows.push([""]);
+                rows.push(["TOTAL", "", "", "", totalStockSum, parseFloat(totalValueSum.toFixed(2)), ""]);
+
+                const ws = XLSX.utils.aoa_to_sheet(rows);
+
+                // Calcolo dinamico larghezza colonne per una perfetta leggibilità
+                const colWidths = rows[3].map((_, colIdx) => {
+                    let maxLen = 12;
+                    rows.forEach(r => {
+                        if (r[colIdx] !== undefined && r[colIdx] !== null) {
+                            const strLen = String(r[colIdx]).length;
+                            if (strLen > maxLen) maxLen = strLen;
+                        }
+                    });
+                    return { wch: maxLen + 3 };
+                });
+                ws['!cols'] = colWidths;
+
+                return ws;
+            };
+
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Inventory");
-            XLSX.writeFile(wb, `Inventory_Magari.xlsx`);
-            closeExportExcelModal();
-            window.showAlert("📊 Excel scaricato!");
+            const foodItems = window.inventoryData.filter(i => !isAlcoholCategory(i.category)).sort((a, b) => a.name.localeCompare(b.name));
+            const alcoholItems = window.inventoryData.filter(i => isAlcoholCategory(i.category)).sort((a, b) => a.name.localeCompare(b.name));
+
+            if (type === 'food') {
+                const wsFood = buildSheetData(foodItems, "Food & Supplies");
+                XLSX.utils.book_append_sheet(wb, wsFood, "Food & Supplies");
+            } else if (type === 'alcohol') {
+                const wsAlcohol = buildSheetData(alcoholItems, "Alcohol & Beverages");
+                XLSX.utils.book_append_sheet(wb, wsAlcohol, "Alcohol & Beverages");
+            } else {
+                const wsFood = buildSheetData(foodItems, "Food & Supplies");
+                const wsAlcohol = buildSheetData(alcoholItems, "Alcohol & Beverages");
+                XLSX.utils.book_append_sheet(wb, wsFood, "Food & Supplies");
+                XLSX.utils.book_append_sheet(wb, wsAlcohol, "Alcohol & Beverages");
+            }
+
+            const cleanLoc = locName.split(' ')[0];
+            const dateStr = new Date().toISOString().split('T')[0]; // Genera la data nel formato YYYY-MM-DD (es. 2026-09-30)
+            
+            XLSX.writeFile(wb, `Inventory_Magari_${cleanLoc}_${type}_${dateStr}.xlsx`);
+            closeExportExcelModal(); 
+            window.showAlert("📊 File Excel scaricato con successo!");
         };
 
-        window.toggleReportPeriodInputs = function() {
+        window.toggleReportPeriodInputs = () => {
             const type = document.getElementById('report-period-type').value;
             const group = document.getElementById('report-month-select-group');
             if (group) group.style.display = (type === 'month') ? 'block' : 'none';
         };
-
         window.generateRealReport = function() {
             const periodType = document.getElementById('report-period-type').value;
             const selectedMonth = document.getElementById('report-month-picker').value;
-            const activeLoc = window.activeLocation || 'Vasastan';
-            const activeLocShort = activeLoc.split(' ')[0];
+            const activeLocShort = (window.activeLocation || 'Vasastan').split(' ')[0];
+            document.getElementById('report-title-display').innerText = `📊 Report - ${activeLocShort} (${periodType === 'total' ? 'Totale' : (periodType === 'month' ? selectedMonth : 'Giacenze')})`;
 
-            let titleStr = `📊 Report Consumi - ${activeLocShort} (${periodType === 'total' ? 'Totale Storico' : (periodType === 'month' ? selectedMonth : 'Giacenze Attuali')})`;
-            document.getElementById('report-title-display').innerText = titleStr;
-
-            let alcoholItems = {};
-            let foodItems = {};
-
+            let alcoholItems = {}, foodItems = {};
             if (periodType === 'stock') {
                 window.inventoryData.forEach(item => {
                     const qty = window.getQty(item);
                     if (qty > 0) {
-                        const totalCost = parseFloat((qty * (item.price || 0)).toFixed(2));
-                        const dataObj = { name: item.name, qty: qty, unit: item.unit, cost: totalCost };
-                        if (item.category === 'Alcolici' || item.category === 'Bevande') {
-                            alcoholItems[item.name] = dataObj;
-                        } else {
-                            foodItems[item.name] = dataObj;
-                        }
+                        const target = (item.category === 'Alcolici' || item.category === 'Bevande') ? alcoholItems : foodItems;
+                        target[item.name] = { name: item.name, qty: qty, unit: item.unit, cost: parseFloat((qty * (item.price || 0)).toFixed(2)) };
                     }
                 });
             } else {
-                const historyFiltered = window.orderHistoryData.filter(h => {
-                    const matchesLoc = h.destination && h.destination.includes(activeLocShort);
-                    if (!matchesLoc) return false;
-                    if (periodType === 'month' && selectedMonth) {
-                        return h.timestamp && h.timestamp.includes(selectedMonth.split('-').reverse().join('/'));
-                    }
-                    return true;
-                });
-
+                const historyFiltered = window.orderHistoryData.filter(h => h.destination && h.destination.includes(activeLocShort) && (periodType !== 'month' || !selectedMonth || (h.timestamp && h.timestamp.includes(selectedMonth.split('-').reverse().join('/')))));
                 historyFiltered.forEach(h => {
                     if (Array.isArray(h.items)) {
                         h.items.forEach(it => {
                             const inv = window.inventoryData.find(x => x.name.toLowerCase() === it.name.toLowerCase());
-                            const cat = inv?.category || 'Altro';
-                            const price = inv?.price || 0;
-                            const qty = parseFloat(it.qty) || 0;
-
-                            const targetMap = (cat === 'Alcolici' || cat === 'Bevande') ? alcoholItems : foodItems;
-                            if (!targetMap[it.name]) {
-                                targetMap[it.name] = { name: it.name, qty: 0, unit: it.unit, price: price };
-                            }
-                            targetMap[it.name].qty += qty;
+                            const targetMap = ((inv?.category || 'Altro') === 'Alcolici' || (inv?.category || 'Altro') === 'Bevande') ? alcoholItems : foodItems;
+                            if (!targetMap[it.name]) targetMap[it.name] = { name: it.name, qty: 0, unit: it.unit, price: (inv?.price || 0) };
+                            targetMap[it.name].qty += (parseFloat(it.qty) || 0);
                         });
                     }
                 });
-
                 for (let k in alcoholItems) alcoholItems[k].cost = parseFloat((alcoholItems[k].qty * alcoholItems[k].price).toFixed(2));
                 for (let k in foodItems) foodItems[k].cost = parseFloat((foodItems[k].qty * foodItems[k].price).toFixed(2));
             }
 
-            const fillTableWithTotals = (tableId, itemsMap) => {
-                const table = document.getElementById(tableId);
-                let tbody = table.querySelector('tbody');
-                let tfoot = table.querySelector('tfoot');
-                
-                if (!tfoot) {
-                    tfoot = document.createElement('tfoot');
-                    table.appendChild(tfoot);
-                }
-
-                tbody.innerHTML = '';
-                tfoot.innerHTML = '';
-
-                const keys = Object.keys(itemsMap);
-                if (keys.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#999;">Nessun dato presente</td></tr>';
-                    return 0;
-                }
-
-                let catSumSEK = 0;
-                keys.forEach(k => {
-                    const item = itemsMap[k];
-                    catSumSEK += item.cost;
-                    tbody.innerHTML += `<tr><td>${item.name}</td><td>${item.qty} ${item.unit}</td><td>${item.cost.toFixed(2)} SEK</td></tr>`;
-                });
-
-                tfoot.innerHTML = `<tr><td colspan="2" style="text-align:right;">TOTALE CATEGORIA:</td><td>${catSumSEK.toFixed(2)} SEK</td></tr>`;
-                return catSumSEK;
+            const fillTable = (id, map) => {
+                const t = document.getElementById(id); let tb = t.querySelector('tbody'), tf = t.querySelector('tfoot');
+                if (!tf) { tf = document.createElement('tfoot'); t.appendChild(tf); }
+                tb.innerHTML = ''; tf.innerHTML = '';
+                const keys = Object.keys(map);
+                if (keys.length === 0) return tb.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#999;">Nessun dato</td></tr>', 0;
+                let sum = 0; keys.forEach(k => { sum += map[k].cost; tb.innerHTML += `<tr><td>${map[k].name}</td><td>${map[k].qty} ${map[k].unit}</td><td>${map[k].cost.toFixed(2)} SEK</td></tr>`; });
+                tf.innerHTML = `<tr><td colspan="2" style="text-align:right;">TOTALE:</td><td>${sum.toFixed(2)} SEK</td></tr>`; return sum;
             };
 
-            const totalAlcohol = fillTableWithTotals('table-alcohol-report', alcoholItems);
-            const totalFood = fillTableWithTotals('table-food-report', foodItems);
-            const grandTotal = totalAlcohol + totalFood;
-
-            const grandBox = document.getElementById('grand-total-report-box');
-            if (grandBox) {
-                grandBox.innerText = `💳 GRAN TOTALE COMPLESSIVO: ${grandTotal.toFixed(2)} SEK`;
-            }
-
-            document.getElementById('report-results-container').style.display = 'block';
-            window.showAlert("📊 Report generato con i Totali!");
+            const gTotal = fillTable('table-alcohol-report', alcoholItems) + fillTable('table-food-report', foodItems);
+            const gBox = document.getElementById('grand-total-report-box'); if (gBox) gBox.innerText = `💳 GRAN TOTALE COMPLESSIVO: ${gTotal.toFixed(2)} SEK`;
+            document.getElementById('report-results-container').style.display = 'block'; window.showAlert("📊 Report generato!");
         };
 
-        window.submitBugReport = function() {
+        // 8. BUG REPORT
+        window.submitBugReport = async function() {
             const op = document.getElementById('bug-operator-input').value.trim();
             const desc = document.getElementById('bug-desc-input').value.trim();
-            const type = document.getElementById('bug-type-select').value;
-            const loc = document.getElementById('bug-location-display').value || window.activeLocation || 'Sede Non Specifica';
-
-            if (!op || !desc) return window.showAlert("⚠️ Compila nome e descrizione per procedere.");
-
+            if (!op || !desc) return window.showAlert("⚠️ Compila nome e descrizione.");
             const nowStr = new Date().toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            const newId = Date.now();
 
-            if (!Array.isArray(window.bugReportsData)) {
-                window.bugReportsData = [];
-            }
-
-            window.bugReportsData.unshift({
-                id: Date.now() + Math.random(),
-                timestamp: nowStr,
-                operator: op,
-                type: type,
-                description: desc,
-                location: loc,
-                resolved: false
+            await setDoc(doc(db, "bugReports", String(newId)), {
+                id: newId, timestamp: nowStr, operator: op, type: document.getElementById('bug-type-select').value,
+                description: desc, location: document.getElementById('bug-location-display').value || window.activeLocation || 'Sede Non Specifica', resolved: false
             });
 
-            saveDataToCloud();
-            updateBugBadgesAndAdminList();
-
-            document.getElementById('bug-operator-input').value = '';
-            document.getElementById('bug-desc-input').value = '';
-            window.showAlert("🚀 Segnalazione inviata con successo!");
-            navigateTo('ordini');
+            document.getElementById('bug-operator-input').value = ''; document.getElementById('bug-desc-input').value = '';
+            window.showAlert("🚀 Segnalazione inviata!"); window.navigateTo('ordini');
         };
 
         const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
