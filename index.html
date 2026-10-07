@@ -195,6 +195,7 @@
             </div>
             <div class="content-list" id="stock-list"></div>
         </div>
+
         <!-- 3. STORICO ORDINI -->
         <div id="view-storico" class="view-section">
             <div class="top-bar-container">
@@ -724,7 +725,13 @@
                     const userDoc = await getDoc(userDocRef);
                     if (userDoc.exists()) {
                         const data = userDoc.data();
-                        if (!isMasterAdmin) {
+                        if (isMasterAdmin) {
+                            window.currentUserProfile.role = "admin";
+                            window.currentUserProfile.approved = true;
+                            if (data.role !== "admin" || !data.approved) {
+                                await updateDoc(userDocRef, { role: "admin", approved: true });
+                            }
+                        } else {
                             window.currentUserProfile.role = data.role || "operator";
                             window.currentUserProfile.approved = data.approved === true;
                         }
@@ -977,7 +984,36 @@
                         </div>`;
                 });
             } catch(e) {
-                container.innerHTML = `<div style="font-size:12px; color:red;">Errore caricamento: ${e.message}</div>`;
+                console.error("Errore lettura utenti:", e);
+                container.innerHTML = `
+                    <div style="font-size:12px; color:#c62828; text-align:center; padding:8px;">
+                        ⚠️ Errore permessi Firestore.<br>
+                        <button onclick="fixMasterProfileAdmin()" style="margin-top:6px; background:#2563eb; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;">🛠️ Ripristina Profilo Admin</button>
+                    </div>`;
+            }
+        };
+
+        window.fixMasterProfileAdmin = async function() {
+            if (!auth.currentUser) return window.showAlert("🔑 Effettua prima il Login.");
+            try {
+                const isMaster = auth.currentUser.email && auth.currentUser.email.toLowerCase() === "nicolas@magaripizza.com";
+                const userRef = doc(db, "users", auth.currentUser.uid);
+                await setDoc(userRef, {
+                    uid: auth.currentUser.uid,
+                    email: auth.currentUser.email,
+                    name: auth.currentUser.displayName || "Nicolas Cappiello",
+                    role: isMaster ? "admin" : "operator",
+                    approved: true
+                }, { merge: true });
+
+                if (window.currentUserProfile) {
+                    window.currentUserProfile.role = isMaster ? "admin" : "operator";
+                    window.currentUserProfile.approved = true;
+                }
+                window.showAlert("✅ Profilo risincronizzato! Riprova ora.");
+                window.loadUsersListForAdmin();
+            } catch(e) {
+                window.showAlert(`❌ Errore: ${e.message}`);
             }
         };
 
@@ -1306,7 +1342,7 @@
             });
             filtered = window.sortStockItemsArray(filtered, sortMode);
             
-            const c = document.getElementById('stock-list'); c.innerHTML = '';
+            const c = document.getElementById('stock-list'); if (!c) return; c.innerHTML = '';
             filtered.forEach(item => {
                 const sup = window.suppliersData.find(s => String(s.id) === String(item.supplierId));
                 const qty = window.getQty(item), min = window.getMin(item), isLow = qty < min;
@@ -1344,7 +1380,7 @@
             });
             filtered = window.sortItemsArray(filtered, sortMode);
             
-            const c = document.getElementById('order-list'); c.innerHTML = '';
+            const c = document.getElementById('order-list'); if (!c) return; c.innerHTML = '';
             filtered.forEach(item => {
                 const sup = window.suppliersData.find(s => String(s.id) === String(item.supplierId));
                 const qty = window.getQty(item), min = window.getMin(item), isLow = qty < min;
@@ -1408,7 +1444,7 @@
             let groups = {};
             items.forEach(i => { if(!groups[i.supplierId]) groups[i.supplierId] = []; groups[i.supplierId].push(i); });
             
-            const c = document.getElementById('summary-content'); c.innerHTML = '';
+            const c = document.getElementById('summary-content'); if (!c) return; c.innerHTML = '';
             const locNameClean = (window.activeLocation || 'Magari').split(' ')[0].toUpperCase();
             const todayFormatted = new Date().toLocaleDateString('it-IT');
 
@@ -1499,6 +1535,7 @@
             if (!entry) return;
 
             const container = document.getElementById('verify-items-checklist-container');
+            if (!container) return;
             container.innerHTML = '';
             entry.items.forEach((it, idx) => {
                 container.innerHTML += `
@@ -1556,7 +1593,7 @@
         };
 
         window.filterHistoryItems = function() {
-            const c = document.getElementById('history-list'); c.innerHTML = '';
+            const c = document.getElementById('history-list'); if (!c) return; c.innerHTML = '';
             const query = (document.getElementById('search-history-input')?.value || '').toLowerCase();
             const activeLocShort = window.activeLocation ? window.activeLocation.split(' ')[0] : '';
 
@@ -1609,7 +1646,7 @@
             const q = (document.getElementById('search-input')?.value || '').toLowerCase();
             const cat = document.getElementById('filter-inventory-category')?.value || '';
             const sup = document.getElementById('filter-inventory-supplier')?.value || '';
-            const c = document.getElementById('inventory-list'); c.innerHTML = '';
+            const c = document.getElementById('inventory-list'); if (!c) return; c.innerHTML = '';
 
             window.inventoryData.filter(i => {
                 return i.name.toLowerCase().includes(q) && (!cat || (cat === 'FAVORITES' ? i.isFavorite : i.category === cat)) && (!sup || String(i.supplierId) === String(sup));
@@ -1696,7 +1733,7 @@
         // FORNITORI
         window.filterSuppliers = function() {
             const q = (document.getElementById('search-supplier-input')?.value || '').toLowerCase();
-            const c = document.getElementById('suppliers-list'); c.innerHTML = '';
+            const c = document.getElementById('suppliers-list'); if (!c) return; c.innerHTML = '';
             window.suppliersData.filter(s => s.name.toLowerCase().includes(q)).sort((a, b) => a.name.localeCompare(b.name)).forEach(s => {
                 c.innerHTML += `
                     <div class="card-item">
