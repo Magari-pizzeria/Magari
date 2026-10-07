@@ -7,8 +7,9 @@
 - v3.9.12 DEVELOPER:
   * Avvisi Staff riprogettati in formato Card Pastello (Opzione A).
   * Menu Laterale e Modali aggiornati con palette pastello riposante.
-  * Ripristinato e corretto il motore di calcolo Report Consumi.
-  * Ampliata e dettagliata la sezione FAQ & Guida Rapida per lo staff.
+  * Aggiunta opzione "Password dimenticata?" riservata per gli operatori.
+  * Notifiche automatiche all'amministratore per le nuove registrazioni staff.
+  * Footer con firma sviluppatore uniforme in tutte le pagine.
 ====================================================================
 -->
     <meta charset="UTF-8">
@@ -32,6 +33,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -302,7 +304,7 @@
                 <div class="faq-item-box">
                     <div class="faq-question">✍️ 4. Come verificare una Consegna arrivata e stornare la Scorta?</div>
                     <div class="faq-answer">
-                        Quando la merce arrives in pizzeria:<br>
+                        Quando la merce arriva in pizzeria:<br>
                         1. Vai nella sezione <b>📜 Storico Ordini</b>.<br>
                         2. Trova l'ordine con il bollino rosso ⚠️ <i>Da Controllare</i>.<br>
                         3. Clicca su <b>"✍️ Verifica & Storna"</b>.<br>
@@ -437,6 +439,9 @@
             <div class="form-group"><label>Email</label><input type="email" id="login-email" class="form-control" placeholder="es. marco@magaripizza.com"></div>
             <div class="form-group"><label>Password</label><input type="password" id="login-password" class="form-control" placeholder="••••••••"></div>
             <button class="btn-save" onclick="handleLoginSubmit()" style="width:100%; padding:10px; margin-top:6px;">Entra</button>
+            <div style="text-align:center; margin-top:10px;">
+                <button type="button" onclick="handleForgotPassword()" style="background:none; border:none; color:#2563eb; font-size:12px; font-weight:600; cursor:pointer; text-decoration:underline;">🔑 Password dimenticata?</button>
+            </div>
         </div>
 
         <div id="auth-form-register" style="display:none;">
@@ -849,7 +854,7 @@
             window.showAlert(`🗑️ Avviso rimosso per ${window.activeLocation || locKey}.`);
         };
 
-        // LOGIN E REGISTRAZIONE AUTONOMA OPERATORI
+        // LOGIN, PASSWORD RESET E REGISTRAZIONE AUTONOMA OPERATORI CON NOTIFICA
         window.openAuthModal = () => { 
             window.closeAll();
             document.getElementById('auth-modal').classList.add('active'); 
@@ -880,6 +885,24 @@
             } catch(e) { window.showAlert(`❌ Errore Login: ${e.message}`); }
         };
 
+        window.handleForgotPassword = async function() {
+            const email = document.getElementById('login-email').value.trim();
+            if (!email) {
+                return window.showAlert("⚠️ Inserisci la tua email per ricevere il link di reset.");
+            }
+
+            try {
+                const actionCodeSettings = {
+                    url: window.location.href, // Usa l'URL esatto della pagina per evitare che risulti scaduto
+                    handleCodeInApp: true
+                };
+                await sendPasswordResetEmail(auth, email, actionCodeSettings);
+                window.showAlert("📧 Email di reset riservata inviata! Controlla la tua casella di posta.");
+            } catch(e) {
+                window.showAlert(`❌ Errore invio reset: ${e.message}`);
+            }
+        };
+
         window.handleRegisterSubmit = async function() {
             const name = document.getElementById('reg-name').value.trim();
             const email = document.getElementById('reg-email').value.trim();
@@ -889,8 +912,22 @@
                 const res = await createUserWithEmailAndPassword(auth, email, pass);
                 const isMasterAdmin = email.toLowerCase() === "nicolas@magaripizza.com";
                 const newUser = { uid: res.user.uid, email, name, role: isMasterAdmin ? 'admin' : 'operator' };
+                
+                // 1. Salvataggio profilo utente
                 await setDoc(doc(db, "users", res.user.uid), newUser);
-                closeAuthModal(); window.showAlert("✅ Account Staff registrato con successo!");
+
+                // 2. Registrazione notifica Firestore per l'Admin
+                const notifId = Date.now();
+                await setDoc(doc(db, "adminNotifications", String(notifId)), {
+                    id: notifId,
+                    type: "NEW_USER_REGISTRATION",
+                    message: `👤 Nuovo operatore registrato: ${name} (${email})`,
+                    timestamp: new Date().toLocaleString('it-IT'),
+                    read: false
+                });
+
+                closeAuthModal(); 
+                window.showAlert("✅ Account Staff registrato! Notifica inviata all'amministratore.");
             } catch(e) { window.showAlert(`❌ Errore Registrazione: ${e.message}`); }
         };
 
@@ -935,7 +972,7 @@
                                 </span>
                             </div>
                             <div style="display:flex; justify-content:flex-end; gap:6px; margin-top:2px; border-top:1px dashed #e2e8f0; padding-top:6px;">
-                                <button onclick="sendUserPasswordReset('${uData.email}')" style="background:#fff3cd; color:#856404; border:1px solid #ffeeba; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold; cursor:pointer;">🔑 Reset Pass</button>
+                                <button onclick="sendUserPasswordReset('${uData.email}')" style="background:#fff3cd; color:#856404; border:1px solid #ffeeba; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold; cursor:pointer;">🔑 Invia Reset</button>
                                 ${!isMaster ? `
                                     <button onclick="openUserModal('${uUid}')" style="background:#e3f2fd; color:#0d47a1; border:1px solid #bbdefb; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold; cursor:pointer;">✏️ Modifica</button>
                                     <button onclick="deleteUserFromAdmin('${uUid}', '${uData.name}')" style="background:#ffebee; color:#c62828; border:1px solid #ffcdd2; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold; cursor:pointer;">🗑 Elimina</button>
@@ -1014,14 +1051,14 @@
 
         window.sendUserPasswordReset = async function(email) {
             if (!window.checkAuthGuard()) return;
-            if (confirm(`Inviare l'email di ripristino password a ${email}?`)) {
+            if (confirm(`Inviare l'email di ripristino password riservata a ${email}?`)) {
                 try {
                     const actionCodeSettings = {
-                        url: 'https://magari-app-dev.firebaseapp.com',
+                        url: window.location.href,
                         handleCodeInApp: true
                     };
                     await sendPasswordResetEmail(auth, email, actionCodeSettings);
-                    window.showAlert("📧 Email di reset inviata all'operatore!");
+                    window.showAlert("📧 Email di reset riservata inviata all'operatore!");
                 } catch(e) {
                     window.showAlert(`❌ Errore invio reset: ${e.message}`);
                 }
