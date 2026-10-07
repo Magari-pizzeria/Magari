@@ -4,12 +4,12 @@
 <!--
 ====================================================================
 [MAGARI APP - HISTORICAL CHANGELOG REGISTRY & ARCHIVE]
-- v3.9.12 DEVELOPER:
-  * Avvisi Staff riprogettati in formato Card Pastello (Opzione A).
-  * Menu Laterale e Modali aggiornati con palette pastello riposante.
-  * Aggiunta opzione "Password dimenticata?" riservata per gli operatori.
-  * Notifiche automatiche all'amministratore per le nuove registrazioni staff.
-  * Footer con firma sviluppatore uniforme in tutte le pagine.
+- v3.9.13 DEVELOPER:
+  * Sistema di Registrazione con Approvazione Obbligatoria dell'Admin.
+  * Gli utenti registrati rimangono in attesa di approvazione prima di operare.
+  * Pannello Gestione Operatori aggiornato con pulsante "Approva".
+  * Banner Avvisi Staff in formato Card Pastello (Opzione A).
+  * Footer con firma sviluppatore uniforme e distanziato.
 ====================================================================
 -->
     <meta charset="UTF-8">
@@ -27,13 +27,12 @@
     <link rel="apple-touch-icon" href="logo-square.png">
     <link rel="icon" type="image/png" href="logo-square.png">
 
-    <title>Magari v3.9.12 DEV</title>
+    <title>Magari v3.9.13 DEV</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -60,7 +59,7 @@
             <div class="drawer-header" style="text-align: center;">
                 <img src="logo-header.png" alt="Magari Logo" style="max-width: 170px; height: auto; margin-bottom: 4px;" onerror="this.style.display='none'; document.getElementById('drawer-text-fallback').style.display='block';">
                 <div id="drawer-text-fallback" class="brand-title" style="display:none; font-size: 24px;">MAGARI</div>
-                <div class="brand-subtitle" style="font-size: 9px; background:#b45309;">v3.9.12 DEVELOPER</div>
+                <div class="brand-subtitle" style="font-size: 9px; background:#b45309;">v3.9.13 DEVELOPER</div>
             </div>
 
             <!-- USER ACCOUNT BANNER NELLO MENU -->
@@ -96,7 +95,7 @@
             <div class="header-brand-text">
                 <img src="logo-header.png" alt="Magari" style="height: 34px; width: auto;" onerror="this.style.display='none'; document.getElementById('header-text-fallback').style.display='block';">
                 <div id="header-text-fallback" class="brand-title" style="display:none;">MAGARI</div>
-                <div class="brand-subtitle" style="background:#b45309;">v3.9.12 DEVELOPER</div>
+                <div class="brand-subtitle" style="background:#b45309;">v3.9.13 DEVELOPER</div>
             </div>
             <div class="page-badge" id="page-title">Ordini</div>
         </div>
@@ -371,10 +370,10 @@
                     <button onclick="publishStaffNotice()" class="btn-save" style="width:100%; margin-top:8px; background:#b45309;">Pubblica Avviso</button>
                 </div>
 
-                <!-- 👥 PANNELLO GESTIONE STAFF -->
+                <!-- 👥 PANNELLO GESTIONE STAFF & APPROVAZIONI -->
                 <div style="background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #cbd5e1; margin-top:8px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                        <h4 style="font-size:14px; color:var(--primary);">👥 Gestione Operatori & Team</h4>
+                        <h4 style="font-size:14px; color:var(--primary);">👥 Gestione Operatori & Approvazioni</h4>
                         <div style="display:flex; gap:6px;">
                             <button onclick="openUserModal()" class="add-btn" style="padding:4px 8px; font-size:11px;">+ Nuovo Utente</button>
                             <button onclick="loadUsersListForAdmin()" style="background:none; border:none; color:#2563eb; font-size:12px; font-weight:bold; cursor:pointer;">🔄</button>
@@ -439,9 +438,6 @@
             <div class="form-group"><label>Email</label><input type="email" id="login-email" class="form-control" placeholder="es. marco@magaripizza.com"></div>
             <div class="form-group"><label>Password</label><input type="password" id="login-password" class="form-control" placeholder="••••••••"></div>
             <button class="btn-save" onclick="handleLoginSubmit()" style="width:100%; padding:10px; margin-top:6px;">Entra</button>
-            <div style="text-align:center; margin-top:10px;">
-                <button type="button" onclick="handleForgotPassword()" style="background:none; border:none; color:#2563eb; font-size:12px; font-weight:600; cursor:pointer; text-decoration:underline;">🔑 Password dimenticata?</button>
-            </div>
         </div>
 
         <div id="auth-form-register" style="display:none;">
@@ -646,7 +642,6 @@
             getAuth, 
             signInWithEmailAndPassword, 
             createUserWithEmailAndPassword, 
-            sendPasswordResetEmail,
             signOut, 
             onAuthStateChanged 
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -709,7 +704,7 @@
         window.orderHistoryData = [];
         window.bugReportsData = [];
 
-        // 1. MONITORAGGIO STATO AUTENTICAZIONE
+        // 1. MONITORAGGIO STATO AUTENTICAZIONE E APPROVAZIONE OPERATORE
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const isMasterAdmin = user.email && user.email.toLowerCase() === "nicolas@magaripizza.com";
@@ -720,7 +715,8 @@
                     uid: user.uid,
                     email: user.email,
                     name: userName,
-                    role: userRole
+                    role: userRole,
+                    approved: isMasterAdmin // Master Admin sempre approvato
                 };
 
                 try {
@@ -730,6 +726,7 @@
                         const data = userDoc.data();
                         if (!isMasterAdmin) {
                             window.currentUserProfile.role = data.role || "operator";
+                            window.currentUserProfile.approved = data.approved === true;
                         }
                         window.currentUserProfile.name = data.name || userName;
                     } else {
@@ -755,14 +752,21 @@
 
             if (window.currentUserProfile) {
                 const isAdmin = window.currentUserProfile.role === 'admin';
-                const roleBadge = isAdmin ? '⭐ Admin' : '👤 Operatore';
+                const isApproved = window.currentUserProfile.approved === true;
+                
+                let roleBadge = isAdmin ? '⭐ Admin' : '👤 Operatore';
+                if (!isApproved && !isAdmin) {
+                    roleBadge = '⏳ In attesa di approvazione';
+                }
+
                 if (statusTxt) statusTxt.innerHTML = `${roleBadge}: <b>${window.currentUserProfile.name}</b>`;
                 if (authBtn) { authBtn.innerText = '🚪 Logout'; authBtn.style.background = '#e53935'; authBtn.onclick = window.handleLogoutSubmit; }
                 if (btnDeleteNotice) btnDeleteNotice.style.display = isAdmin ? 'inline-block' : 'none';
                 
-                if (opOrderInput) opOrderInput.value = window.currentUserProfile.name;
-                if (opStockInput) opStockInput.value = window.currentUserProfile.name;
-                if (opBugInput) opBugInput.value = window.currentUserProfile.name;
+                const opText = isApproved ? window.currentUserProfile.name : '⏳ Account In Attesa di Approvazione Admin';
+                if (opOrderInput) opOrderInput.value = opText;
+                if (opStockInput) opStockInput.value = opText;
+                if (opBugInput) opBugInput.value = opText;
 
                 ['magazzino', 'fornitori', 'sprechi', 'impostazioni'].forEach(sec => {
                     const banner = document.getElementById(`lock-banner-${sec}`);
@@ -788,6 +792,10 @@
             if (!window.currentUserProfile) {
                 window.showAlert("🔑 Effettua il Login prima di eseguire questa operazione.");
                 window.openAuthModal();
+                return false;
+            }
+            if (window.currentUserProfile.role !== 'admin' && window.currentUserProfile.approved !== true) {
+                window.showAlert("⏳ Il tuo account è in attesa di approvazione da parte di Nicolas (Admin).");
                 return false;
             }
             return true;
@@ -854,7 +862,7 @@
             window.showAlert(`🗑️ Avviso rimosso per ${window.activeLocation || locKey}.`);
         };
 
-        // LOGIN, PASSWORD RESET E REGISTRAZIONE AUTONOMA OPERATORI CON NOTIFICA
+        // LOGIN E REGISTRAZIONE AUTONOMA OPERATORI CON APPROVAZIONE ADMIN
         window.openAuthModal = () => { 
             window.closeAll();
             document.getElementById('auth-modal').classList.add('active'); 
@@ -885,24 +893,6 @@
             } catch(e) { window.showAlert(`❌ Errore Login: ${e.message}`); }
         };
 
-        window.handleForgotPassword = async function() {
-            const email = document.getElementById('login-email').value.trim();
-            if (!email) {
-                return window.showAlert("⚠️ Inserisci la tua email per ricevere il link di reset.");
-            }
-
-            try {
-                const actionCodeSettings = {
-                    url: window.location.href, // Usa l'URL esatto della pagina per evitare che risulti scaduto
-                    handleCodeInApp: true
-                };
-                await sendPasswordResetEmail(auth, email, actionCodeSettings);
-                window.showAlert("📧 Email di reset riservata inviata! Controlla la tua casella di posta.");
-            } catch(e) {
-                window.showAlert(`❌ Errore invio reset: ${e.message}`);
-            }
-        };
-
         window.handleRegisterSubmit = async function() {
             const name = document.getElementById('reg-name').value.trim();
             const email = document.getElementById('reg-email').value.trim();
@@ -911,23 +901,23 @@
             try {
                 const res = await createUserWithEmailAndPassword(auth, email, pass);
                 const isMasterAdmin = email.toLowerCase() === "nicolas@magaripizza.com";
-                const newUser = { uid: res.user.uid, email, name, role: isMasterAdmin ? 'admin' : 'operator' };
                 
-                // 1. Salvataggio profilo utente
+                const newUser = { 
+                    uid: res.user.uid, 
+                    email: email, 
+                    name: name, 
+                    role: isMasterAdmin ? 'admin' : 'operator',
+                    approved: isMasterAdmin // Solo il Master Admin parte approvato
+                };
+                
                 await setDoc(doc(db, "users", res.user.uid), newUser);
 
-                // 2. Registrazione notifica Firestore per l'Admin
-                const notifId = Date.now();
-                await setDoc(doc(db, "adminNotifications", String(notifId)), {
-                    id: notifId,
-                    type: "NEW_USER_REGISTRATION",
-                    message: `👤 Nuovo operatore registrato: ${name} (${email})`,
-                    timestamp: new Date().toLocaleString('it-IT'),
-                    read: false
-                });
-
                 closeAuthModal(); 
-                window.showAlert("✅ Account Staff registrato! Notifica inviata all'amministratore.");
+                if (isMasterAdmin) {
+                    window.showAlert("🎉 Account Master registrato e attivo!");
+                } else {
+                    window.showAlert("⏳ Account creato! In attesa di approvazione dall'Admin (Nicolas).");
+                }
             } catch(e) { window.showAlert(`❌ Errore Registrazione: ${e.message}`); }
         };
 
@@ -936,7 +926,7 @@
             window.showAlert("🚪 Logout effettuato.");
         };
 
-        // PANNELLO GESTIONE COMPLETA OPERATORI (SOLO ADMIN)
+        // PANNELLO GESTIONE STAFF & APPROVAZIONE CONCESSA DALL'ADMIN
         window.loadUsersListForAdmin = async function() {
             const container = document.getElementById('admin-users-list-container');
             if (!container) return;
@@ -958,31 +948,44 @@
                     const uData = docSnap.data();
                     const uUid = docSnap.id;
                     const isAdmin = uData.role === 'admin';
+                    const isApproved = uData.approved === true;
                     const isMaster = uData.email && uData.email.toLowerCase() === "nicolas@magaripizza.com";
 
+                    const statusBadge = isMaster ? '⭐ Master Admin' : (
+                        isApproved ? '<span style="color:#2e7d32; background:#e8f5e9; padding:2px 6px; border-radius:4px; font-weight:bold;">✅ Approvato</span>' 
+                                   : '<span style="color:#c2410c; background:#ffedd5; padding:2px 6px; border-radius:4px; font-weight:bold;">⏳ In Attesa</span>'
+                    );
+
                     container.innerHTML += `
-                        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:8px; display:flex; flex-direction:column; gap:6px;">
+                        <div style="background:${!isApproved && !isMaster ? '#fff8f0' : '#f8fafc'}; border:1px solid ${!isApproved && !isMaster ? '#f97316' : '#e2e8f0'}; border-radius:6px; padding:8px; display:flex; flex-direction:column; gap:6px;">
                             <div style="display:flex; justify-content:space-between; align-items:center;">
                                 <div>
                                     <div style="font-weight:bold; color:var(--primary); font-size:13px;">${uData.name || 'Senza Nome'}</div>
                                     <div style="font-size:11px; color:#666;">${uData.email}</div>
                                 </div>
-                                <span style="font-weight:bold; font-size:11px; padding:2px 6px; border-radius:4px; background:${isAdmin ? '#e8f5e9' : '#e0f2fe'}; color:${isAdmin ? '#2e7d32' : '#0288d1'};">
-                                    ${isAdmin ? '⭐ Admin' : '👤 Operatore'}
-                                </span>
+                                <div style="font-size:11px;">${statusBadge}</div>
                             </div>
                             <div style="display:flex; justify-content:flex-end; gap:6px; margin-top:2px; border-top:1px dashed #e2e8f0; padding-top:6px;">
-                                <button onclick="sendUserPasswordReset('${uData.email}')" style="background:#fff3cd; color:#856404; border:1px solid #ffeeba; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold; cursor:pointer;">🔑 Invia Reset</button>
+                                ${!isApproved && !isMaster ? `
+                                    <button onclick="approveUserFromAdmin('${uUid}', '${uData.name}')" style="background:#2e7d32; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;">✅ Approva Operatore</button>
+                                ` : ''}
                                 ${!isMaster ? `
                                     <button onclick="openUserModal('${uUid}')" style="background:#e3f2fd; color:#0d47a1; border:1px solid #bbdefb; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold; cursor:pointer;">✏️ Modifica</button>
-                                    <button onclick="deleteUserFromAdmin('${uUid}', '${uData.name}')" style="background:#ffebee; color:#c62828; border:1px solid #ffcdd2; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold; cursor:pointer;">🗑 Elimina</button>
-                                ` : '<span style="font-size:10px; color:#999; font-style:italic; padding-top:2px;">Account Master</span>'}
+                                    <button onclick="deleteUserFromAdmin('${uUid}', '${uData.name}')" style="background:#ffebee; color:#c62828; border:1px solid #ffcdd2; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold; cursor:pointer;">🗑 Elimina Profilo</button>
+                                ` : ''}
                             </div>
                         </div>`;
                 });
             } catch(e) {
                 container.innerHTML = `<div style="font-size:12px; color:red;">Errore caricamento: ${e.message}</div>`;
             }
+        };
+
+        window.approveUserFromAdmin = async function(uid, name) {
+            if (!window.checkAuthGuard()) return;
+            await updateDoc(doc(db, "users", uid), { approved: true });
+            window.showAlert(`✅ Operatore ${name} approvato! Ora può operare sull'app.`);
+            window.loadUsersListForAdmin();
         };
 
         window.openUserModal = async function(uid = null) {
@@ -997,7 +1000,7 @@
             const passGroup = document.getElementById('user-field-pass-group');
 
             if (uid) {
-                document.getElementById('user-modal-title').innerText = '✏️ Modifica Operatore';
+                document.getElementById('user-modal-title').innerText = '✏️ Modifica Profilo Operatore';
                 passGroup.style.display = 'none';
                 const userDoc = await getDoc(doc(db, "users", uid));
                 if (userDoc.exists()) {
@@ -1038,8 +1041,8 @@
                 if (!pass || pass.length < 6) return window.showAlert("⚠️ Password di almeno 6 caratteri.");
                 try {
                     const res = await createUserWithEmailAndPassword(auth, email, pass);
-                    await setDoc(doc(db, "users", res.user.uid), { uid: res.user.uid, name, email, role });
-                    window.showAlert("🎉 Nuovo operatore creato con successo!");
+                    await setDoc(doc(db, "users", res.user.uid), { uid: res.user.uid, name, email, role, approved: true });
+                    window.showAlert("🎉 Nuovo operatore creato e approvato!");
                 } catch(e) {
                     return window.showAlert(`❌ Errore Creazione: ${e.message}`);
                 }
@@ -1049,27 +1052,11 @@
             window.loadUsersListForAdmin();
         };
 
-        window.sendUserPasswordReset = async function(email) {
-            if (!window.checkAuthGuard()) return;
-            if (confirm(`Inviare l'email di ripristino password riservata a ${email}?`)) {
-                try {
-                    const actionCodeSettings = {
-                        url: window.location.href,
-                        handleCodeInApp: true
-                    };
-                    await sendPasswordResetEmail(auth, email, actionCodeSettings);
-                    window.showAlert("📧 Email di reset riservata inviata all'operatore!");
-                } catch(e) {
-                    window.showAlert(`❌ Errore invio reset: ${e.message}`);
-                }
-            }
-        };
-
         window.deleteUserFromAdmin = async function(uid, name) {
             if (!window.checkAuthGuard()) return;
-            if (confirm(`Sei sicuro di voler eliminare l'operatore ${name}?`)) {
+            if (confirm(`Eliminare il profilo di ${name}? L'operatore potrà registrarsi nuovamente creando una nuova password.`)) {
                 await deleteDoc(doc(db, "users", uid));
-                window.showAlert("🗑 Operatore eliminato dal database.");
+                window.showAlert("🗑 Profilo eliminato dal database.");
                 window.loadUsersListForAdmin();
             }
         };
@@ -1787,7 +1774,7 @@
             }
         };
 
-        // EXPORT EXCEL (ACCESSIBILE A TUTTI GLI UTENTI LOGGATI)
+        // EXPORT EXCEL (ACCESSIBILE A TUTTI GLI UTENTI LOGGATI E APPROVATI)
         window.promptExportExcelModal = () => { 
             if (!window.checkAuthGuard()) return; 
             window.closeAll(); 
