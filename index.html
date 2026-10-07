@@ -4,10 +4,11 @@
 <!--
 ====================================================================
 [MAGARI APP - OFFICIAL STABLE RELEASE]
-- v4.0.0 STABLE:
+- v4.1.0 STABLE:
   * Versione Stabile Ufficiale per Pizzeria Magari Stockholm.
   * Puntamento al database ufficiale di produzione.
-  * Sistema di registrazione staff con approvazione obbligatoria Admin.
+  * Registrazione immediata senza approvazione operatore.
+  * Selezione persistenza Login ("Rimani collegato").
   * Interfaccia pulita per la gestione scorte, ordini e fornitori.
   * Footer con firma sviluppatore uniforme in tutte le pagine.
 ====================================================================
@@ -27,7 +28,7 @@
     <link rel="apple-touch-icon" href="logo-square.png">
     <link rel="icon" type="image/png" href="logo-square.png">
 
-    <title>Magari Pizzeria v4.0.0 STABLE</title>
+    <title>Magari Pizzeria v4.1.0 STABLE</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -59,7 +60,7 @@
             <div class="drawer-header" style="text-align: center;">
                 <img src="logo-header.png" alt="Magari Logo" style="max-width: 170px; height: auto; margin-bottom: 4px;" onerror="this.style.display='none'; document.getElementById('drawer-text-fallback').style.display='block';">
                 <div id="drawer-text-fallback" class="brand-title" style="display:none; font-size: 24px;">MAGARI</div>
-                <div class="brand-subtitle" style="font-size: 9px; background:#1b5e20;">v4.0.0 STABLE</div>
+                <div class="brand-subtitle" style="font-size: 9px; background:#1b5e20;">v4.1.0 STABLE</div>
             </div>
 
             <!-- USER ACCOUNT BANNER NELLO MENU -->
@@ -95,7 +96,7 @@
             <div class="header-brand-text">
                 <img src="logo-header.png" alt="Magari" style="height: 34px; width: auto;" onerror="this.style.display='none'; document.getElementById('header-text-fallback').style.display='block';">
                 <div id="header-text-fallback" class="brand-title" style="display:none;">MAGARI</div>
-                <div class="brand-subtitle" style="background:#1b5e20;">v4.0.0 STABLE</div>
+                <div class="brand-subtitle" style="background:#1b5e20;">v4.1.0 STABLE</div>
             </div>
             <div class="page-badge" id="page-title">Ordini</div>
         </div>
@@ -371,10 +372,10 @@
                     <button onclick="publishStaffNotice()" class="btn-save" style="width:100%; margin-top:8px; background:#b45309;">Pubblica Avviso</button>
                 </div>
 
-                <!-- 👥 PANNELLO GESTIONE STAFF & APPROVAZIONI -->
+                <!-- 👥 PANNELLO GESTIONE STAFF -->
                 <div style="background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #cbd5e1; margin-top:8px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                        <h4 style="font-size:14px; color:var(--primary);">👥 Gestione Operatori & Approvazioni</h4>
+                        <h4 style="font-size:14px; color:var(--primary);">👥 Gestione Operatori Staff</h4>
                         <div style="display:flex; gap:6px;">
                             <button onclick="openUserModal()" class="add-btn" style="padding:4px 8px; font-size:11px;">+ Nuovo Utente</button>
                             <button onclick="loadUsersListForAdmin()" style="background:none; border:none; color:#2563eb; font-size:12px; font-weight:bold; cursor:pointer;">🔄</button>
@@ -438,7 +439,15 @@
         <div id="auth-form-login">
             <div class="form-group"><label>Email</label><input type="email" id="login-email" class="form-control" placeholder="es. marco@magaripizza.com"></div>
             <div class="form-group"><label>Password</label><input type="password" id="login-password" class="form-control" placeholder="••••••••"></div>
-            <button class="btn-save" onclick="handleLoginSubmit()" style="width:100%; padding:10px; margin-top:6px;">Entra</button>
+            
+            <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+                <input type="checkbox" id="remember-me-checkbox" style="width: 18px; height: 18px; cursor: pointer;" checked>
+                <label for="remember-me-checkbox" style="font-size: 13px; font-weight: 600; color: #334155; margin: 0; cursor: pointer;">
+                    🔒 Rimani collegato su questo dispositivo
+                </label>
+            </div>
+
+            <button class="btn-save" onclick="handleLoginSubmit()" style="width:100%; padding:10px; margin-top:10px;">Entra</button>
         </div>
 
         <div id="auth-form-register" style="display:none;">
@@ -644,7 +653,10 @@
             signInWithEmailAndPassword, 
             createUserWithEmailAndPassword, 
             signOut, 
-            onAuthStateChanged 
+            onAuthStateChanged,
+            setPersistence,
+            browserLocalPersistence,
+            browserSessionPersistence
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { 
             initializeFirestore, 
@@ -705,7 +717,7 @@
         window.orderHistoryData = [];
         window.bugReportsData = [];
 
-        // 1. MONITORAGGIO STATO AUTENTICAZIONE E APPROVAZIONE OPERATORE
+        // 1. MONITORAGGIO STATO AUTENTICAZIONE UTENTI
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const isMasterAdmin = user.email && user.email.toLowerCase() === "nicolas@magaripizza.com";
@@ -716,8 +728,7 @@
                     uid: user.uid,
                     email: user.email,
                     name: userName,
-                    role: userRole,
-                    approved: isMasterAdmin
+                    role: userRole
                 };
 
                 try {
@@ -725,19 +736,10 @@
                     const userDoc = await getDoc(userDocRef);
                     if (userDoc.exists()) {
                         const data = userDoc.data();
-                        if (isMasterAdmin) {
-                            window.currentUserProfile.role = "admin";
-                            window.currentUserProfile.approved = true;
-                            if (data.role !== "admin" || !data.approved) {
-                                await updateDoc(userDocRef, { role: "admin", approved: true });
-                            }
-                        } else {
-                            window.currentUserProfile.role = data.role || "operator";
-                            window.currentUserProfile.approved = data.approved === true;
-                        }
+                        window.currentUserProfile.role = isMasterAdmin ? "admin" : (data.role || "operator");
                         window.currentUserProfile.name = data.name || userName;
                     } else {
-                        await setDoc(userDocRef, window.currentUserProfile);
+                        await setDoc(userDocRef, window.currentUserProfile, { merge: true });
                     }
                 } catch (e) {
                     console.log("Firestore auth backup mode:", e);
@@ -759,18 +761,13 @@
 
             if (window.currentUserProfile) {
                 const isAdmin = window.currentUserProfile.role === 'admin';
-                const isApproved = window.currentUserProfile.approved === true;
-                
-                let roleBadge = isAdmin ? '⭐ Admin' : '👤 Operatore';
-                if (!isApproved && !isAdmin) {
-                    roleBadge = '⏳ In attesa di approvazione';
-                }
+                const roleBadge = isAdmin ? '⭐ Admin' : '👤 Operatore';
 
                 if (statusTxt) statusTxt.innerHTML = `${roleBadge}: <b>${window.currentUserProfile.name}</b>`;
                 if (authBtn) { authBtn.innerText = '🚪 Logout'; authBtn.style.background = '#e53935'; authBtn.onclick = window.handleLogoutSubmit; }
                 if (btnDeleteNotice) btnDeleteNotice.style.display = isAdmin ? 'inline-block' : 'none';
                 
-                const opText = isApproved ? window.currentUserProfile.name : '⏳ Account In Attesa di Approvazione Admin';
+                const opText = window.currentUserProfile.name;
                 if (opOrderInput) opOrderInput.value = opText;
                 if (opStockInput) opStockInput.value = opText;
                 if (opBugInput) opBugInput.value = opText;
@@ -799,10 +796,6 @@
             if (!window.currentUserProfile) {
                 window.showAlert("🔑 Effettua il Login prima di eseguire questa operazione.");
                 window.openAuthModal();
-                return false;
-            }
-            if (window.currentUserProfile.role !== 'admin' && window.currentUserProfile.approved !== true) {
-                window.showAlert("⏳ Il tuo account è in attesa di approvazione da parte di Nicolas (Admin).");
                 return false;
             }
             return true;
@@ -869,7 +862,7 @@
             window.showAlert(`🗑️ Avviso rimosso per ${window.activeLocation || locKey}.`);
         };
 
-        // LOGIN E REGISTRAZIONE AUTONOMA OPERATORI CON APPROVAZIONE ADMIN
+        // LOGIN E REGISTRAZIONE AUTONOMA OPERATORI
         window.openAuthModal = () => { 
             window.closeAll();
             document.getElementById('auth-modal').classList.add('active'); 
@@ -893,8 +886,13 @@
         window.handleLoginSubmit = async function() {
             const email = document.getElementById('login-email').value.trim();
             const pass = document.getElementById('login-password').value.trim();
+            const rememberMe = document.getElementById('remember-me-checkbox')?.checked;
+
             if (!email || !pass) return window.showAlert("⚠️ Compila tutti i campi.");
+
             try {
+                const persistenceType = rememberMe ? browserLocalPersistence : browserSessionPersistence;
+                await setPersistence(auth, persistenceType);
                 await signInWithEmailAndPassword(auth, email, pass);
                 closeAuthModal(); window.showAlert("🎉 Login effettuato con successo!");
             } catch(e) { window.showAlert(`❌ Errore Login: ${e.message}`); }
@@ -913,18 +911,13 @@
                     uid: res.user.uid, 
                     email: email, 
                     name: name, 
-                    role: isMasterAdmin ? 'admin' : 'operator',
-                    approved: isMasterAdmin
+                    role: isMasterAdmin ? 'admin' : 'operator'
                 };
                 
                 await setDoc(doc(db, "users", res.user.uid), newUser);
 
                 closeAuthModal(); 
-                if (isMasterAdmin) {
-                    window.showAlert("🎉 Account Master registrato e attivo!");
-                } else {
-                    window.showAlert("⏳ Account creato! In attesa di approvazione dall'Admin (Nicolas).");
-                }
+                window.showAlert("🎉 Account creato e attivo!");
             } catch(e) { window.showAlert(`❌ Errore Registrazione: ${e.message}`); }
         };
 
@@ -933,7 +926,7 @@
             window.showAlert("🚪 Logout effettuato.");
         };
 
-        // PANNELLO GESTIONE STAFF & APPROVAZIONE CONCESSA DALL'ADMIN
+        // PANNELLO GESTIONE STAFF PER ADMIN
         window.loadUsersListForAdmin = async function() {
             const container = document.getElementById('admin-users-list-container');
             if (!container) return;
@@ -955,27 +948,20 @@
                     const uData = docSnap.data();
                     const uUid = docSnap.id;
                     const isAdmin = uData.role === 'admin';
-                    const isApproved = uData.approved === true;
                     const isMaster = uData.email && uData.email.toLowerCase() === "nicolas@magaripizza.com";
 
-                    const statusBadge = isMaster ? '⭐ Master Admin' : (
-                        isApproved ? '<span style="color:#2e7d32; background:#e8f5e9; padding:2px 6px; border-radius:4px; font-weight:bold;">✅ Approvato</span>' 
-                                   : '<span style="color:#c2410c; background:#ffedd5; padding:2px 6px; border-radius:4px; font-weight:bold;">⏳ In Attesa</span>'
-                    );
+                    const roleBadge = isMaster ? '⭐ Master Admin' : (isAdmin ? '⭐ Admin' : '👤 Operatore');
 
                     container.innerHTML += `
-                        <div style="background:${!isApproved && !isMaster ? '#fff8f0' : '#f8fafc'}; border:1px solid ${!isApproved && !isMaster ? '#f97316' : '#e2e8f0'}; border-radius:6px; padding:8px; display:flex; flex-direction:column; gap:6px;">
+                        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:8px; display:flex; flex-direction:column; gap:6px;">
                             <div style="display:flex; justify-content:space-between; align-items:center;">
                                 <div>
                                     <div style="font-weight:bold; color:var(--primary); font-size:13px;">${uData.name || 'Senza Nome'}</div>
                                     <div style="font-size:11px; color:#666;">${uData.email}</div>
                                 </div>
-                                <div style="font-size:11px;">${statusBadge}</div>
+                                <div style="font-size:11px; font-weight:bold; color:#1e293b;">${roleBadge}</div>
                             </div>
                             <div style="display:flex; justify-content:flex-end; gap:6px; margin-top:2px; border-top:1px dashed #e2e8f0; padding-top:6px;">
-                                ${!isApproved && !isMaster ? `
-                                    <button onclick="approveUserFromAdmin('${uUid}', '${uData.name}')" style="background:#2e7d32; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;">✅ Approva Operatore</button>
-                                ` : ''}
                                 ${!isMaster ? `
                                     <button onclick="openUserModal('${uUid}')" style="background:#e3f2fd; color:#0d47a1; border:1px solid #bbdefb; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold; cursor:pointer;">✏️ Modifica</button>
                                     <button onclick="deleteUserFromAdmin('${uUid}', '${uData.name}')" style="background:#ffebee; color:#c62828; border:1px solid #ffcdd2; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold; cursor:pointer;">🗑 Elimina Profilo</button>
@@ -985,43 +971,8 @@
                 });
             } catch(e) {
                 console.error("Errore lettura utenti:", e);
-                container.innerHTML = `
-                    <div style="font-size:12px; color:#c62828; text-align:center; padding:8px;">
-                        ⚠️ Errore permessi Firestore.<br>
-                        <button onclick="fixMasterProfileAdmin()" style="margin-top:6px; background:#2563eb; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;">🛠️ Ripristina Profilo Admin</button>
-                    </div>`;
+                container.innerHTML = `<div style="font-size:12px; color:#c62828; text-align:center; padding:8px;">⚠️ Impossibile caricare la lista utenti.</div>`;
             }
-        };
-
-        window.fixMasterProfileAdmin = async function() {
-            if (!auth.currentUser) return window.showAlert("🔑 Effettua prima il Login.");
-            try {
-                const isMaster = auth.currentUser.email && auth.currentUser.email.toLowerCase() === "nicolas@magaripizza.com";
-                const userRef = doc(db, "users", auth.currentUser.uid);
-                await setDoc(userRef, {
-                    uid: auth.currentUser.uid,
-                    email: auth.currentUser.email,
-                    name: auth.currentUser.displayName || "Nicolas Cappiello",
-                    role: isMaster ? "admin" : "operator",
-                    approved: true
-                }, { merge: true });
-
-                if (window.currentUserProfile) {
-                    window.currentUserProfile.role = isMaster ? "admin" : "operator";
-                    window.currentUserProfile.approved = true;
-                }
-                window.showAlert("✅ Profilo risincronizzato! Riprova ora.");
-                window.loadUsersListForAdmin();
-            } catch(e) {
-                window.showAlert(`❌ Errore: ${e.message}`);
-            }
-        };
-
-        window.approveUserFromAdmin = async function(uid, name) {
-            if (!window.checkAuthGuard()) return;
-            await updateDoc(doc(db, "users", uid), { approved: true });
-            window.showAlert(`✅ Operatore ${name} approvato! Ora può operare sull'app.`);
-            window.loadUsersListForAdmin();
         };
 
         window.openUserModal = async function(uid = null) {
@@ -1077,8 +1028,8 @@
                 if (!pass || pass.length < 6) return window.showAlert("⚠️ Password di almeno 6 caratteri.");
                 try {
                     const res = await createUserWithEmailAndPassword(auth, email, pass);
-                    await setDoc(doc(db, "users", res.user.uid), { uid: res.user.uid, name, email, role, approved: true });
-                    window.showAlert("🎉 Nuovo operatore creato e approvato!");
+                    await setDoc(doc(db, "users", res.user.uid), { uid: res.user.uid, name, email, role });
+                    window.showAlert("🎉 Nuovo operatore creato!");
                 } catch(e) {
                     return window.showAlert(`❌ Errore Creazione: ${e.message}`);
                 }
