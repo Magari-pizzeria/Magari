@@ -227,7 +227,6 @@
             </div>
             <div class="content-list" id="history-list"></div>
         </div>
-
         <!-- 4. MAGAZZINO (SOLO ADMIN) -->
         <div id="view-magazzino" class="view-section">
             <div class="page-lock-banner" id="lock-banner-magazzino">
@@ -378,7 +377,7 @@
                 <div class="faq-item-box">
                     <div class="faq-question">🍷 11. Come funziona la distinzione Alcolici / Bevande negli Excel e Report?</div>
                     <div class="faq-answer">
-                        Gli alcolici e le bevande analcoliche vengono gestiti con due sottototali separati ed un gran totale unificato, permettendo un controllo contabile e di licenza preciso per ogni sede.
+                        Gli alcolici e le bevande analcoliche vengono gestiti con due subtotali separati ed un gran totale unificato, permettendo un controllo contabile e di licenza preciso per ogni sede.
                     </div>
                 </div>
 
@@ -693,7 +692,6 @@
 
         .badge-notification { background: var(--danger); color: white; border-radius: 12px; font-size: 11px; font-weight: 800; padding: 2px 8px; display: inline-block; }
     </style>
-
     <script type="module">
         // 1. DEREGISTRAZIONE DIRETTA DEI SERVICE WORKER PER INVALIDARE VECCHIE COPIE IN CACHE
         if ('serviceWorker' in navigator) {
@@ -803,7 +801,7 @@
             window.refreshAllViews();
         });
 
-        // NOTIFICATORE POPUP REALTIME PER NUOVE REGISTRAZIONI STAFF
+        // NOTIFICATORE POPUP REALTIME PER NUOVE REGISTRAZIONS STAFF
         let isInitialUsersLoad = true;
         onSnapshot(collection(db, "users"), (snapshot) => {
             if (isInitialUsersLoad) {
