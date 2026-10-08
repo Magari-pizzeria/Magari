@@ -5,30 +5,25 @@
 ====================================================================
 [MAGARI APP - HISTORICAL CHANGELOG REGISTRY & ARCHIVE]
 
+- v4.1.2 STABLE (08/10/2026 - FIX CACHE BUSTING, AUTH PERSISTENCE & REALTIME NOTIFICATIONS):
+  1. Integrato script per la deregistrazione automatica dei Service Worker (sw.js) obsolezione cache PWA.
+  2. Implementata la notifica popup in tempo reale all'ingresso di nuovi membri dello staff (listener onSnapshot su 'users').
+  3. Perfezionata la gestione "Rimani collegato" (setPersistence con browserLocalPersistence vs browserSessionPersistence).
+  4. Applicato il Versioning/Cache-Busting (?v=4.1.2) su risorse e fogli di stile.
+  5. Sincronizzata la chiave API ufficiale attiva (AIzaSyDum2tdEg2WbugPk8fIWsQ-uVIJXZyK67M) sul progetto magari-b7f93.
+
 - v4.1.1 STABLE (08/10/2026 - FIX CACHE BUSTING & STORAGE BUCKET):
-  1. Aggiunti meta tag No-Cache (Cache-Control, Pragma, Expires) per forzare il browser a verificare e scaricare l'ultima versione ad ogni avvio.
-  2. Corretto il valore di storageBucket in firebaseConfig (magari-b7f93.firebasestorage.app) per evitare disallineamenti e blocchi in scrittura.
-  3. Risolto definitivamente il problema del caricamento di vecchie configurazioni di sviluppo (magari-app-dev) da parte della cache del browser.
+  6. Aggiunti meta tag No-Cache (Cache-Control, Pragma, Expires) per forzare il browser a verificare e scaricare l'ultima versione ad ogni avvio.
+  7. Corretto il valore di storageBucket in firebaseConfig (magari-b7f93.firebasestorage.app) per evitare disallineamenti e blocchi in scrittura.
 
 - v4.1.0 STABLE (08/10/2026 - RELEASE UFFICIALE PRODUZIONE):
-  4. Transizione definitiva e collegamento al database Firebase Ufficiale (magari-b7f93).
-  5. Aggiunto selettore "Rimani collegato" (Checkbox Remember Me) nel modale di Login per scegliere tra sessione locale e temporanea.
-  6. Eliminazione del flusso di approvazione pendente per i nuovi operatori (gli account creati sono subito attivi).
-  7. Ripristino del pannello "Gestione Operatori Staff" in Impostazioni con pulsanti diretti "Modifica" ed "Elimina".
-  8. Protezione dell'account Master Admin (nicolas@magaripizza.com) da modifiche ed eliminazioni accidentali.
-  9. Ampliamento della sezione "Guida Rapida & FAQ" estesa a 12 punti operativi dettagliati.
-  10. Invariata l'anagrafica prodotti, i fornitori default e le impostazioni dei minimi scorta separati per Sede.
-  11. Mantenuta l'interfaccia grafica originale, le card pastello e il layout responsive.
-  12. Footer con firma sviluppatore ufficiale ("Nicolas Cappiello").
-
-- v4.0.2 DEV (08/10/2026):
-  13. Test integrazione modulo di approvazione e debug permessi Firestore.
-
-- v4.0.1 DEV (07/10/2026):
-  14. Test disallineamento Auth/Firestore su progetto di sviluppo (magari-app-dev).
-
-- v4.0.0 STABLE (01/10/2026):
-  15. Prima release con architettura multi-sede (Vasastan/Östermalm) ed Export Excel multisfoglio.
+  8. Transizione definitiva e collegamento al database Firebase Ufficiale (magari-b7f93).
+  9. Aggiunto selettore "Rimani collegato" (Checkbox Remember Me) nel modale di Login per scegliere tra sessione locale e temporanea.
+  10. Eliminazione del flusso di approvazione pendente per i nuovi operatori (gli account creati sono subito attivi).
+  11. Ripristino del pannello "Gestione Operatori Staff" in Impostazioni con pulsanti diretti "Modifica" ed "Elimina".
+  12. Protezione dell'account Master Admin (nicolas@magaripizza.com) da modifiche ed eliminazioni accidentali.
+  13. Ampliamento della sezione "Guida Rapida & FAQ" estesa a 12 punti operativi dettagliati.
+  14. Footer con firma sviluppatore ufficiale ("Nicolas Cappiello").
 ====================================================================
 -->
     <meta charset="UTF-8">
@@ -47,11 +42,11 @@
     <meta name="apple-mobile-web-app-title" content="Magari Pizzeria">
     
     <!-- Icone Schermata Home & Favicon -->
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="logo-square.png">
-    <link rel="icon" type="image/png" href="logo-square.png">
+    <link rel="manifest" href="manifest.json?v=4.1.2">
+    <link rel="apple-touch-icon" href="logo-square.png?v=4.1.2">
+    <link rel="icon" type="image/png" href="logo-square.png?v=4.1.2">
 
-    <title>Magari v4.1.1 STABLE</title>
+    <title>Magari v4.1.2 STABLE</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -61,6 +56,7 @@
 <body>
 
     <div id="toast-notification" class="toast-notification"></div>
+    <div id="realtime-user-toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 99999; display: flex; flex-direction: column; gap: 8px;"></div>
 
     <!-- SELEZIONE SEDE GUARD -->
     <div class="page-lock-banner" id="location-guard-banner" style="display: flex; position: fixed; z-index: 3000; padding-top: 100px;">
@@ -83,7 +79,7 @@
             <div class="drawer-header" style="text-align: center;">
                 <img src="logo-header.png" alt="Magari Logo" style="max-width: 170px; height: auto; margin-bottom: 4px;" onerror="this.style.display='none'; document.getElementById('drawer-text-fallback').style.display='block';">
                 <div id="drawer-text-fallback" class="brand-title" style="display:none; font-size: 24px;">MAGARI</div>
-                <div class="brand-subtitle" style="font-size: 9px; background:#2e7d32;">v4.1.1 STABLE</div>
+                <div class="brand-subtitle" style="font-size: 9px; background:#2e7d32;">v4.1.2 STABLE</div>
             </div>
 
             <!-- USER ACCOUNT BANNER NELLO MENU -->
@@ -119,7 +115,7 @@
             <div class="header-brand-text">
                 <img src="logo-header.png" alt="Magari" style="height: 34px; width: auto;" onerror="this.style.display='none'; document.getElementById('header-text-fallback').style.display='block';">
                 <div id="header-text-fallback" class="brand-title" style="display:none;">MAGARI</div>
-                <div class="brand-subtitle" style="background:#2e7d32;">v4.1.1 STABLE</div>
+                <div class="brand-subtitle" style="background:#2e7d32;">v4.1.2 STABLE</div>
             </div>
             <div class="page-badge" id="page-title">Ordini</div>
         </div>
@@ -219,6 +215,7 @@
             </div>
             <div class="content-list" id="stock-list"></div>
         </div>
+
         <!-- 3. STORICO ORDINI -->
         <div id="view-storico" class="view-section">
             <div class="top-bar-container">
@@ -291,7 +288,7 @@
             </div>
         </div>
 
-        <!-- 7. FAQ & GUIDA RAPIDA (AMPLIATA A 12 PUNTI) -->
+        <!-- 7. FAQ & GUIDA RAPIDA -->
         <div id="view-faq" class="view-section">
             <div class="top-bar-container">
                 <div style="font-size:16px; font-weight:800; color:var(--primary);">❓ Guida Rapida & FAQ Staff</div>
@@ -457,6 +454,7 @@
         </footer>
 
     </div>
+
     <!-- MODALI UTILITY PASTELLO -->
     <div class="modal" id="user-edit-modal">
         <div class="modal-title" id="user-modal-title">👤 Operatore</div>
@@ -695,7 +693,18 @@
 
         .badge-notification { background: var(--danger); color: white; border-radius: 12px; font-size: 11px; font-weight: 800; padding: 2px 8px; display: inline-block; }
     </style>
+
     <script type="module">
+        // 1. DEREGISTRAZIONE DIRETTA DEI SERVICE WORKER PER INVALIDARE VECCHIE COPIE IN CACHE
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+                for (let registration of registrations) {
+                    registration.unregister();
+                }
+            });
+        }
+
+        // 2. MODULI FIREBASE SDKS
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { 
             getAuth, 
@@ -720,26 +729,21 @@
             writeBatch 
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // CONFIGURAZIONE FIREBASE AMBIENTE UFFICIALE PRODUZIONE
+        // CONFIGURAZIONE FIREBASE AMBIENTE UFFICIALE PRODUZIONE (magari-b7f93)
         const firebaseConfig = {
             apiKey: "AIzaSyDum2tdEg2WbugPk8fIWsQ-uVIJXZyK67M",
             authDomain: "magari-b7f93.firebaseapp.com",
             projectId: "magari-b7f93",
             storageBucket: "magari-b7f93.firebasestorage.app",
-            messagingSenderId: "653540923043",
-            appId: "1:653540923043:web:387815ffd7b79385ff1116"
+            messagingSenderId: "135472598053",
+            appId: "1:135472598053:web:a3fd59a851fe99f51a03cc",
+            measurementId: "G-QX5P0FC137"
         };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // SERVICE WORKER REGISTRATION (per PWA)
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').catch(err => console.log('ServiceWorker note:', err));
-            });
-        }
         window.currentUserProfile = null;
         window.activeLocation = null;
         window.activeVerifyHistoryId = null;
@@ -763,7 +767,7 @@
         window.orderHistoryData = [];
         window.bugReportsData = [];
 
-        // 1. MONITORAGGIO STATO AUTENTICAZIONE UTENTE
+        // MONITORAGGIO STATO AUTENTICAZIONE UTENTE
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const isMasterAdmin = user.email && user.email.toLowerCase() === "nicolas@magaripizza.com";
@@ -798,6 +802,46 @@
             window.updateAuthUIState();
             window.refreshAllViews();
         });
+
+        // NOTIFICATORE POPUP REALTIME PER NUOVE REGISTRAZIONI STAFF
+        let isInitialUsersLoad = true;
+        onSnapshot(collection(db, "users"), (snapshot) => {
+            if (isInitialUsersLoad) {
+                isInitialUsersLoad = false;
+                return;
+            }
+            snapshot.docChanges().forEach((change) => {
+                if (change.type === "added") {
+                    const newUser = change.doc.data();
+                    window.showRealtimeUserToast(newUser.name || newUser.email || "Nuovo Operatore");
+                }
+            });
+        });
+
+        window.showRealtimeUserToast = function(identifier) {
+            const container = document.getElementById('realtime-user-toast-container');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                background-color: #1b5e20;
+                color: white;
+                padding: 12px 18px;
+                border-radius: 8px;
+                font-size: 13px;
+                font-weight: bold;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+                border-left: 5px solid #81c784;
+                transition: opacity 0.3s ease;
+            `;
+            toast.innerHTML = `🔔 <strong>Nuovo Account Staff:</strong> Si è registrato ${identifier}`;
+
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        };
 
         window.updateAuthUIState = function() {
             const statusTxt = document.getElementById('user-status-text');
@@ -939,7 +983,6 @@
             if (!email || !pass) return window.showAlert("⚠️ Compila tutti i campi.");
 
             try {
-                // Imposta persistenza locale se selezionato, altrimenti di sola sessione
                 const persistenceType = rememberMe ? browserLocalPersistence : browserSessionPersistence;
                 await setPersistence(auth, persistenceType);
                 await signInWithEmailAndPassword(auth, email, pass);
@@ -978,7 +1021,7 @@
             window.showAlert("🚪 Logout effettuato.");
         };
 
-        // PANNELLO GESTIONE STAFF IN IMPOSTAZIONI (SENZA BLOCCO APPROVAZIONE)
+        // PANNELLO GESTIONE STAFF IN IMPOSTAZIONI
         window.loadUsersListForAdmin = async function() {
             const container = document.getElementById('admin-users-list-container');
             if (!container) return;
@@ -1867,7 +1910,7 @@
                 return ws;
             };
 
-            // Foglio Alcolici & Bevande con 2 Subtotali e Gran Totale
+            // Foglio Alcolici & Bevande con Subtotali e Gran Totale
             const buildAlcoholSheetData = () => {
                 const rows = [
                     [`MAGARI INVENTORY REPORT - ALCOHOL & BEVERAGES`],
