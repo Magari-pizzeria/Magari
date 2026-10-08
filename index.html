@@ -117,7 +117,6 @@
             <span id="active-location-text">📍 Sede: Non selezionata</span>
             <button onclick="promptChangeLocation()" style="background: white; border: 1px solid #2e7d32; color: #2e7d32; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer;">Cambia Sede</button>
         </div>
-
         <!-- 1. ORDINI -->
         <div id="view-ordini" class="view-section active">
             <div class="top-bar-container">
@@ -430,7 +429,6 @@
         <div class="form-group"><label>Email</label><input type="email" id="supp-email" class="form-control"></div>
         <div class="modal-actions"><button class="btn-cancel" onclick="closeAddSupplierModal()">Annulla</button><button class="btn-save" onclick="saveSupplier()">Salva</button></div>
     </div>
-
     <style>
         :root {
             --primary: #043927; --bg: #e6e3dc; --card-bg: #f5f3ed; --text: #1c1c1a;
@@ -516,7 +514,7 @@
     </style>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { 
             getAuth, 
             signInWithEmailAndPassword, 
@@ -674,7 +672,7 @@
                     if (meta) meta.innerText = `📍 ${data.location || locKey.toUpperCase()} • ${data.author || 'Admin'}`;
                     if (banner) banner.style.display = 'block';
                 } else { if (banner) banner.style.display = 'none'; }
-            });
+            }, (error) => { console.error("Notice error:", error); });
         };
 
         window.publishStaffNotice = async function() {
@@ -726,13 +724,14 @@
             const email = document.getElementById('reg-email').value.trim();
             const pass = document.getElementById('reg-password').value.trim();
             if (!name || !email || !pass) return window.showAlert("⚠️ Compila tutti i campi.");
+            if (pass.length < 6) return window.showAlert("⚠️ La password deve essere di almeno 6 caratteri.");
             try {
                 const res = await createUserWithEmailAndPassword(auth, email, pass);
                 const isMasterAdmin = email.toLowerCase() === "nicolas@magaripizza.com";
                 const newUser = { uid: res.user.uid, email, name, role: isMasterAdmin ? 'admin' : 'operator' };
                 await setDoc(doc(db, "users", res.user.uid), newUser);
                 closeAuthModal(); window.showAlert("🎉 Account registrato!");
-            } catch(e) { window.showAlert(`❌ Errore: ${e.message}`); }
+            } catch(e) { window.showAlert(`❌ Errore Registrazione: ${e.message}`); }
         };
 
         window.handleLogoutSubmit = async function() { await signOut(auth); window.showAlert("🚪 Logout effettuato."); };
@@ -753,7 +752,10 @@
                             <div>${!isMasterEmail ? `<button class="btn-action-del" onclick="deleteUserFromAdmin('${uUid}')">Elimina</button>` : 'Master'}</div>
                         </div>`;
                 });
-            } catch(e) { container.innerHTML = '<div style="font-size:12px; color:red;">Errore caricamento.</div>'; }
+            } catch(e) { 
+                console.error("Load users error:", e);
+                container.innerHTML = '<div style="font-size:12px; color:red;">Errore caricamento utenti.</div>'; 
+            }
         };
 
         window.openUserModal = function() {
@@ -762,12 +764,58 @@
             document.getElementById('overlay').classList.add('active');
         };
         window.closeUserModal = () => { document.getElementById('user-edit-modal').classList.remove('active'); document.getElementById('overlay').classList.remove('active'); };
+        
+        window.saveUserFromAdmin = async function() {
+            if (!window.checkAuthGuard()) return;
+            const name = document.getElementById('user-field-name').value.trim();
+            const email = document.getElementById('user-field-email').value.trim();
+            const role = document.getElementById('user-field-role').value;
+            const pass = document.getElementById('user-field-pass').value.trim();
+
+            if (!name || !email) return window.showAlert("⚠️ Inserisci Nome ed Email.");
+            if (!pass || pass.length < 6) return window.showAlert("⚠️ Password di almeno 6 caratteri.");
+
+            try {
+                const secondaryAppName = "SecondaryApp_" + Date.now();
+                const secondaryApp = initializeApp(firebaseConfig, secondaryAppName);
+                const secondaryAuth = getAuth(secondaryApp);
+                
+                const res = await createUserWithEmailAndPassword(secondaryAuth, email, pass);
+                await setDoc(doc(db, "users", res.user.uid), { uid: res.user.uid, name, email, role });
+                
+                await deleteApp(secondaryApp);
+
+                closeUserModal();
+                window.showAlert("🎉 Nuovo operatore creato con successo!");
+                window.loadUsersListForAdmin();
+            } catch(e) {
+                window.showAlert(`❌ Errore Creazione: ${e.message}`);
+            }
+        };
+
         window.deleteUserFromAdmin = async function(uid) { if (confirm("Eliminare utente?")) { await deleteDoc(doc(db, "users", uid)); window.loadUsersListForAdmin(); } };
 
-        onSnapshot(collection(db, "inventory"), (snapshot) => { window.inventoryData = snapshot.docs.map(doc => doc.data()); window.refreshAllViews(); });
-        onSnapshot(collection(db, "suppliers"), (snapshot) => { if(!snapshot.empty) window.suppliersData = snapshot.docs.map(doc => doc.data()); window.populateAllSupplierFilters(); window.refreshAllViews(); });
-        onSnapshot(collection(db, "history"), (snapshot) => { window.orderHistoryData = snapshot.docs.map(doc => doc.data()).sort((a, b) => b.id - a.id); window.refreshAllViews(); });
-        onSnapshot(collection(db, "bugReports"), (snapshot) => { window.bugReportsData = snapshot.docs.map(doc => doc.data()).sort((a, b) => b.id - a.id); window.refreshAllViews(); });
+        // LISTENER FIRESTORE PROTETTI CON ERROR CALLBACK
+        onSnapshot(collection(db, "inventory"), (snapshot) => { 
+            window.inventoryData = snapshot.docs.map(doc => doc.data()); 
+            window.refreshAllViews(); 
+        }, (error) => { console.error("Inventory snapshot error:", error); });
+
+        onSnapshot(collection(db, "suppliers"), (snapshot) => { 
+            if(!snapshot.empty) window.suppliersData = snapshot.docs.map(doc => doc.data()); 
+            window.populateAllSupplierFilters(); 
+            window.refreshAllViews(); 
+        }, (error) => { console.error("Suppliers snapshot error:", error); });
+
+        onSnapshot(collection(db, "history"), (snapshot) => { 
+            window.orderHistoryData = snapshot.docs.map(doc => doc.data()).sort((a, b) => b.id - a.id); 
+            window.refreshAllViews(); 
+        }, (error) => { console.error("History snapshot error:", error); });
+
+        onSnapshot(collection(db, "bugReports"), (snapshot) => { 
+            window.bugReportsData = snapshot.docs.map(doc => doc.data()).sort((a, b) => b.id - a.id); 
+            window.refreshAllViews(); 
+        }, (error) => { console.error("BugReports snapshot error:", error); });
 
         window.getLocationKey = () => (window.activeLocation && window.activeLocation.includes('Östermalm')) ? 'ostermalm' : 'vasastan';
         window.getQty = (i) => window.getLocationKey() === 'ostermalm' ? (i.qty_ostermalm ?? 0) : (i.qty_vasastan ?? i.qty ?? 0);
@@ -946,12 +994,6 @@
             window.orderHistoryData.forEach((h, idx) => {
                 c.innerHTML += `<div class="history-card"><b>${h.supplierName}</b> - 🕒 ${h.timestamp} <button class="btn-action-del" onclick="deleteHistoryItemGuard(${idx})">Elimina</button></div>`;
             });
-        };
-
-        window.toggleFavorite = async function(id) {
-            if (!window.checkAuthGuard()) return;
-            const i = window.inventoryData.find(x => x.id === id);
-            if (i) await updateDoc(doc(db, "inventory", String(id)), { isFavorite: !i.isFavorite });
         };
 
         window.filterItems = function() {
