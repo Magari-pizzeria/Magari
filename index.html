@@ -705,7 +705,8 @@
             onAuthStateChanged,
             setPersistence,
             browserLocalPersistence,
-            browserSessionPersistence
+            browserSessionPersistence,
+            inMemoryPersistence
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { 
             getFirestore, 
@@ -733,6 +734,19 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+
+        // Auth separato per la creazione account da parte dell'Admin:
+        // evita di sostituire la sessione dell'Admin con quella del nuovo operatore.
+        const staffCreationApp = initializeApp(firebaseConfig, "staffCreation");
+        const staffCreationAuth = getAuth(staffCreationApp);
+
+        window.reportFirebaseError = function(context, error) {
+            console.error(`[Firebase ${context}]`, error);
+            const code = error?.code || 'unknown';
+            const message = error?.message || String(error);
+            window.showAlert?.(`⚠️ Firebase ${context}: ${code}`);
+            return { code, message };
+        };
 
         // SERVICE WORKER REGISTRATION (per PWA)
         if ('serviceWorker' in navigator) {
@@ -952,25 +966,36 @@
 
         window.handleRegisterSubmit = async function() {
             const name = document.getElementById('reg-name').value.trim();
-            const email = document.getElementById('reg-email').value.trim();
+            const email = document.getElementById('reg-email').value.trim().toLowerCase();
             const pass = document.getElementById('reg-password').value.trim();
             if (!name || !email || !pass) return window.showAlert("⚠️ Compila tutti i campi.");
+            if (pass.length < 6) return window.showAlert("⚠️ La password deve contenere almeno 6 caratteri.");
+
             try {
+                // La registrazione dal modale pubblico usa l'auth principale.
                 const res = await createUserWithEmailAndPassword(auth, email, pass);
-                const isMasterAdmin = email.toLowerCase() === "nicolas@magaripizza.com";
-                
-                const newUser = { 
-                    uid: res.user.uid, 
-                    email: email, 
-                    name: name, 
+                const isMasterAdmin = email === "nicolas@magaripizza.com";
+                const newUser = {
+                    uid: res.user.uid,
+                    email: email,
+                    name: name,
                     role: isMasterAdmin ? 'admin' : 'operator'
                 };
-                
-                await setDoc(doc(db, "users", res.user.uid), newUser);
 
-                closeAuthModal(); 
+                try {
+                    await setDoc(doc(db, "users", res.user.uid), newUser);
+                } catch (dbError) {
+                    console.error("Account creato ma profilo Firestore non salvato:", dbError);
+                    closeAuthModal();
+                    return window.showAlert(`⚠️ Account creato, ma profilo non salvato nel database (${dbError.code || 'errore Firestore'}).`);
+                }
+
+                closeAuthModal();
                 window.showAlert("🎉 Account registrato ed attivo!");
-            } catch(e) { window.showAlert(`❌ Errore Registrazione: ${e.message}`); }
+            } catch(e) {
+                console.error("Errore Registrazione:", e);
+                window.showAlert(`❌ Errore Registrazione: ${e.code || e.message}`);
+            }
         };
 
         window.handleLogoutSubmit = async function() {
@@ -1030,7 +1055,7 @@
                 });
             } catch(e) {
                 console.error("Errore lettura utenti:", e);
-                container.innerHTML = `<div style="font-size:12px; color:#c62828; text-align:center; padding:10px;">⚠️ Impossibile caricare la lista utenti (${e.message}).</div>`;
+                container.innerHTML = `<div style="font-size:12px; color:#c62828; text-align:center; padding:10px;">⚠️ Impossibile caricare la lista utenti (${e.code || e.message}).<br><small>Controlla Firebase Authentication e le regole Firestore.</small></div>`;
             }
         };
 
@@ -1086,9 +1111,12 @@
             } else {
                 if (!pass || pass.length < 6) return window.showAlert("⚠️ Password di almeno 6 caratteri.");
                 try {
-                    const res = await createUserWithEmailAndPassword(auth, email, pass);
-                    await setDoc(doc(db, "users", res.user.uid), { uid: res.user.uid, name, email, role });
-                    window.showAlert("🎉 Nuovo operatore creato con successo!");
+                    // Usa un'istanza Auth separata: l'Admin resta autenticato.
+                    await setPersistence(staffCreationAuth, inMemoryPersistence);
+                    const res = await createUserWithEmailAndPassword(staffCreationAuth, email.toLowerCase(), pass);
+                    await setDoc(doc(db, "users", res.user.uid), { uid: res.user.uid, name, email: email.toLowerCase(), role });
+                    await signOut(staffCreationAuth);
+                    window.showAlert("🎉 Nuovo operatore creato con successo! L'Admin è rimasto collegato.");
                 } catch(e) {
                     return window.showAlert(`❌ Errore Creazione: ${e.message}`);
                 }
@@ -1108,26 +1136,27 @@
         };
 
         // LISTENERS FIRESTORE IN TEMPO REALE
+        // Tutti i listener hanno un onError: prima gli errori di permessi/rete erano silenziosi.
         onSnapshot(collection(db, "inventory"), (snapshot) => {
             window.inventoryData = snapshot.docs.map(doc => doc.data());
             window.refreshAllViews();
-        });
+        }, (error) => window.reportFirebaseError("lettura inventory", error));
 
         onSnapshot(collection(db, "suppliers"), (snapshot) => {
             if(!snapshot.empty) window.suppliersData = snapshot.docs.map(doc => doc.data());
             window.populateAllSupplierFilters();
             window.refreshAllViews();
-        });
+        }, (error) => window.reportFirebaseError("lettura suppliers", error));
 
         onSnapshot(collection(db, "history"), (snapshot) => {
             window.orderHistoryData = snapshot.docs.map(doc => doc.data()).sort((a, b) => b.id - a.id);
             window.refreshAllViews();
-        });
+        }, (error) => window.reportFirebaseError("lettura history", error));
 
         onSnapshot(collection(db, "bugReports"), (snapshot) => {
             window.bugReportsData = snapshot.docs.map(doc => doc.data()).sort((a, b) => b.id - a.id);
             window.refreshAllViews();
-        });
+        }, (error) => window.reportFirebaseError("lettura bugReports", error));
 
         // HELPERS GENERALI
         window.getLocationKey = () => (window.activeLocation && window.activeLocation.includes('Östermalm')) ? 'ostermalm' : 'vasastan';
