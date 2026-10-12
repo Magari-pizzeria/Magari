@@ -3,34 +3,21 @@
 <head>
 <!--
 ====================================================================
-[MAGARI APP - HISTORICAL CHANGELOG REGISTRY & ARCHIVE]
+[MAGARI APP - RELEASE UFFICIALE PRODUZIONE STABLE]
 
-- v4.1.2 STABLE (08/10/2026 - FIX CACHE BUSTING, AUTH PERSISTENCE & REALTIME NOTIFICATIONS):
-  1. Integrato script per la deregistrazione automatica dei Service Worker (sw.js) obsolezione cache PWA.
-  2. Implementata la notifica popup in tempo reale all'ingresso di nuovi membri dello staff (listener onSnapshot su 'users').
-  3. Perfezionata la gestione "Rimani collegato" (setPersistence con browserLocalPersistence vs browserSessionPersistence).
-  4. Applicato il Versioning/Cache-Busting (?v=4.1.2) su risorse e fogli di stile.
-  5. Sincronizzata la chiave API ufficiale attiva (AIzaSyDum2tdEg2WbugPk8fIWsQ-uVIJXZyK67M) sul progetto magari-b7f93.
-
-- v4.1.1 STABLE (08/10/2026 - FIX CACHE BUSTING & STORAGE BUCKET):
-  6. Aggiunti meta tag No-Cache (Cache-Control, Pragma, Expires) per forzare il browser a verificare e scaricare l'ultima versione ad ogni avvio.
-  7. Corretto il valore di storageBucket in firebaseConfig (magari-b7f93.firebasestorage.app) per evitare disallineamenti e blocchi in scrittura.
-
-- v4.1.0 STABLE (08/10/2026 - RELEASE UFFICIALE PRODUZIONE):
-  8. Transizione definitiva e collegamento al database Firebase Ufficiale (magari-b7f93).
-  9. Aggiunto selettore "Rimani collegato" (Checkbox Remember Me) nel modale di Login per scegliere tra sessione locale e temporanea.
-  10. Eliminazione del flusso di approvazione pendente per i nuovi operatori (gli account creati sono subito attivi).
-  11. Ripristino del pannello "Gestione Operatori Staff" in Impostazioni con pulsanti diretti "Modifica" ed "Elimina".
-  12. Protezione dell'account Master Admin (nicolas@magaripizza.com) da modifiche ed eliminazioni accidentali.
-  13. Ampliamento della sezione "Guida Rapida & FAQ" estesa a 12 punti operativi dettagliati.
-  14. Footer con firma sviluppatore ufficiale ("Nicolas Cappiello").
+- v4.1.8 STABLE (12/10/2026 - PALETTE FORNITORI, RE-ORDERING & PERSISTENT NOTIFICATIONS):
+  1. Palette Curata a 12 Colori ad Alto Contrasto per i fornitori con anteprima e auto-assegnazione.
+  2. Sistema di re-ordering dei fornitori con frecce ⬆️ ⬇️ (campo orderIndex) sincronizzato su tutti i filtri.
+  3. Notifiche registrazioni staff persistenti in Firestore (collection 'notifications') con rimozione manuale.
+  4. Pulizia e armonizzazione delle schede prodotto e dei badge di giacenza.
+  5. Collegamento al database Firebase Ufficiale di Produzione (magari-b7f93).
 ====================================================================
 -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#043927">
     
-    <!-- META TAGS NO-CACHE (PER EVITARE VECCHIE COPIE IN MEMORIA) -->
+    <!-- META TAGS NO-CACHE -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -42,11 +29,11 @@
     <meta name="apple-mobile-web-app-title" content="Magari Pizzeria">
     
     <!-- Icone Schermata Home & Favicon -->
-    <link rel="manifest" href="manifest.json?v=4.1.2">
-    <link rel="apple-touch-icon" href="logo-square.png?v=4.1.2">
-    <link rel="icon" type="image/png" href="logo-square.png?v=4.1.2">
+    <link rel="manifest" href="manifest.json?v=4.1.8">
+    <link rel="apple-touch-icon" href="logo-square.png?v=4.1.8">
+    <link rel="icon" type="image/png" href="logo-square.png?v=4.1.8">
 
-    <title>Magari v4.1.2 STABLE</title>
+    <title>Magari v4.1.8 STABLE</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -56,7 +43,9 @@
 <body>
 
     <div id="toast-notification" class="toast-notification"></div>
-    <div id="realtime-user-toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 99999; display: flex; flex-direction: column; gap: 8px;"></div>
+    
+    <!-- CONTENITORE NOTIFICHE REALTIME PERSISTENTI (IN ALTO AL CENTRO) -->
+    <div id="realtime-user-toast-container" style="position: fixed; top: 68px; left: 50%; transform: translateX(-50%); z-index: 99999; display: flex; flex-direction: column; gap: 8px; width: 92%; max-width: 410px;"></div>
 
     <!-- SELEZIONE SEDE GUARD -->
     <div class="page-lock-banner" id="location-guard-banner" style="display: flex; position: fixed; z-index: 3000; padding-top: 100px;">
@@ -79,13 +68,13 @@
             <div class="drawer-header" style="text-align: center;">
                 <img src="logo-header.png" alt="Magari Logo" style="max-width: 170px; height: auto; margin-bottom: 4px;" onerror="this.style.display='none'; document.getElementById('drawer-text-fallback').style.display='block';">
                 <div id="drawer-text-fallback" class="brand-title" style="display:none; font-size: 24px;">MAGARI</div>
-                <div class="brand-subtitle" style="font-size: 9px; background:#2e7d32;">v4.1.2 STABLE</div>
+                <div class="brand-subtitle" style="font-size: 9px; background:#2e7d32; font-weight:800;">v4.1.8 STABLE</div>
             </div>
 
             <!-- USER ACCOUNT BANNER NELLO MENU -->
-            <div id="drawer-user-box" style="background:#f1f5f9; padding:10px; border-radius:8px; margin-bottom:12px; text-align:center; border:1px solid #cbd5e1;">
+            <div id="drawer-user-box" style="background:#f1f5f9; padding:10px; border-radius:10px; margin-bottom:12px; text-align:center; border:1px solid #cbd5e1; box-shadow: 0 2px 4px rgba(0,0,0,0.03);">
                 <div id="user-status-text" style="font-size:12px; font-weight:bold; color:var(--primary);">👁️ Modalità Lettura (Guest)</div>
-                <button id="btn-auth-action" onclick="openAuthModal()" class="btn-save" style="width:100%; margin-top:6px; padding:6px; font-size:12px; background:#2563eb;">🔑 Accedi / Registrati</button>
+                <button id="btn-auth-action" onclick="openAuthModal()" class="btn-save" style="width:100%; margin-top:6px; padding:6px; font-size:12px; background: linear-gradient(135deg, #2563eb, #1d4ed8);">🔑 Accedi / Registrati</button>
             </div>
 
             <ul class="drawer-menu">
@@ -96,7 +85,7 @@
                 <li onclick="navigateTo('scorte')">📦 Scorte (Giacenze)</li>
                 <li onclick="navigateTo('storico')">
                     <span>📜 Storico Ordini</span>
-                    <span id="history-badge-drawer" class="badge-notification" style="display:none; background:#e53935;">0</span>
+                    <span id="history-badge-drawer" class="badge-notification" style="display:none; background:#dc2626;">0</span>
                 </li>
                 <li onclick="navigateTo('magazzino')">🛠️ Magazzino <span id="lock-icon-magazzino">🔒</span></li>
                 <li onclick="navigateTo('fornitori')">🚚 Fornitori <span id="lock-icon-fornitori">🔒</span></li>
@@ -115,26 +104,26 @@
             <div class="header-brand-text">
                 <img src="logo-header.png" alt="Magari" style="height: 34px; width: auto;" onerror="this.style.display='none'; document.getElementById('header-text-fallback').style.display='block';">
                 <div id="header-text-fallback" class="brand-title" style="display:none;">MAGARI</div>
-                <div class="brand-subtitle" style="background:#2e7d32;">v4.1.2 STABLE</div>
+                <div class="brand-subtitle" style="background:#2e7d32; font-weight:800;">v4.1.8 STABLE</div>
             </div>
             <div class="page-badge" id="page-title">Ordini</div>
         </div>
 
-        <!-- BANNER AVVISI STAFF (CARD PASTELLO) -->
-        <div id="staff-notice-banner" style="display:none; background:#fffbeb; border-left:5px solid #f59e0b; border-bottom:1px solid #fef3c7; padding:12px 16px; margin:10px 12px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.04);">
+        <!-- BANNER AVVISI STAFF -->
+        <div id="staff-notice-banner" style="display:none; background: linear-gradient(135deg, #fffcf5, #fef3c7); border-left:4px solid #f59e0b; border-bottom:1px solid #fde68a; padding:12px 16px; margin:10px 12px; border-radius:10px; box-shadow:0 3px 8px rgba(0,0,0,0.04);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                 <div style="display:flex; align-items:center; gap:6px;">
-                    <span style="font-size:11px; font-weight:800; background:#fef3c7; color:#b45309; padding:2px 8px; border-radius:12px; border:1px solid #fde68a;">📢 COMUNICAZIONE STAFF</span>
+                    <span style="font-size:11px; font-weight:800; background:#fef3c7; color:#92400e; padding:2px 8px; border-radius:12px; border:1px solid #fde68a;">📢 COMUNICAZIONE STAFF</span>
                 </div>
                 <button id="btn-delete-notice" onclick="deleteNoticeFromDb()" style="display:none; background:#fee2e2; border:1px solid #fca5a5; color:#991b1b; font-size:10px; font-weight:bold; padding:3px 8px; border-radius:12px; cursor:pointer;">🗑️ Rimuovi</button>
             </div>
-            <div id="staff-notice-text" style="font-size:15px; font-weight:800; color:#1e293b; line-height:1.3; margin-top:4px;"></div>
+            <div id="staff-notice-text" style="font-size:14px; font-weight:800; color:#1e293b; line-height:1.35; margin-top:4px;"></div>
             <div id="staff-notice-meta" style="font-size:11px; color:#78350f; margin-top:6px; font-weight:500;"></div>
         </div>
 
         <div class="location-active-banner" id="active-location-banner" style="display: none;">
             <span id="active-location-text">📍 Sede: Non selezionata</span>
-            <button onclick="promptChangeLocation()" style="background: white; border: 1px solid #2e7d32; color: #2e7d32; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer;">Cambia Sede</button>
+            <button onclick="promptChangeLocation()" style="background: white; border: 1px solid #2e7d32; color: #2e7d32; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">Cambia Sede</button>
         </div>
 
         <!-- 1. ORDINI -->
@@ -220,7 +209,7 @@
         <div id="view-storico" class="view-section">
             <div class="top-bar-container">
                 <button class="reset-btn" onclick="executeClearHistoryGuard()">🔒 🗑️ Svuota Tutto lo Storico Ordini</button>
-                <div style="font-size:12px; font-weight:700; color:var(--primary); background:#e8f5e9; padding:6px 10px; border-radius:6px; border:1px solid #c8e6c9;">
+                <div style="font-size:12px; font-weight:700; color:#2e7d32; background:#e8f5e9; padding:8px 12px; border-radius:8px; border:1px solid #c8e6c9;">
                     📍 Ordini visualizzati per la Sede Attiva
                 </div>
                 <input type="text" id="search-history-input" class="search-input" placeholder="Cerca nello storico..." oninput="filterHistoryItems()">
@@ -233,7 +222,7 @@
                 <div class="page-lock-box"><div style="font-size: 32px; margin-bottom: 8px;">🔒</div><h3 style="margin-bottom: 6px;">Sezione Riservata Admin</h3><p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">Effettua il Login con account Admin per accedere.</p><button class="btn-save" onclick="openAuthModal()">Accedi come Admin</button></div>
             </div>
             <div class="top-bar-container">
-                <div style="font-size:11px; background:#fff3cd; color:#856404; padding:6px 10px; border-radius:6px; font-weight:600;">
+                <div style="font-size:11px; background:#fef3c7; color:#92400e; padding:6px 10px; border-radius:6px; font-weight:600; border:1px solid #fde68a;">
                     ⭐ <b>Gestione Preferiti:</b> Clicca sulla stellina accanto ai prodotti.
                 </div>
                 <div style="display: flex; gap: 8px; width: 100%;">
@@ -263,7 +252,12 @@
             <div class="page-lock-banner" id="lock-banner-fornitori">
                 <div class="page-lock-box"><div style="font-size: 32px; margin-bottom: 8px;">🔒</div><h3 style="margin-bottom: 6px;">Sezione Riservata Admin</h3><p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">Effettua il Login con account Admin per accedere.</p><button class="btn-save" onclick="openAuthModal()">Accedi come Admin</button></div>
             </div>
-            <div class="top-bar-container"><div class="search-row"><input type="text" id="search-supplier-input" class="search-input" placeholder="Cerca fornitore..." oninput="filterSuppliers()"><button class="add-btn" onclick="openAddSupplierModal()">+ Fornitore</button></div></div>
+            <div class="top-bar-container">
+                <div style="font-size:11px; background:#e0f2fe; color:#0369a1; padding:6px 10px; border-radius:6px; font-weight:600; border:1px solid #bae6fd;">
+                    ↕️ <b>Ordinamento Fornitori:</b> Usa le frecce ⬆️ ⬇️ per riposizionare i fornitori in alto nei menu.
+                </div>
+                <div class="search-row"><input type="text" id="search-supplier-input" class="search-input" placeholder="Cerca fornitore..." oninput="filterSuppliers()"><button class="add-btn" onclick="openAddSupplierModal()">+ Fornitore</button></div>
+            </div>
             <div class="content-list" id="suppliers-list"></div>
         </div>
 
@@ -277,7 +271,7 @@
                 <div class="form-group" id="report-month-select-group" style="display:none;"><label>Mese:</label><input type="month" id="report-month-picker" class="form-control"></div>
                 <button class="btn-save" onclick="generateRealReport()" style="width:100%; padding:10px;">📋 Genera Report</button>
             </div>
-            <div id="report-results-container" style="display:none; background:white; padding:16px; border-radius:8px; margin:16px;">
+            <div id="report-results-container" style="display:none; background:white; padding:16px; border-radius:10px; margin:16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border:1px solid var(--border);">
                 <h3 id="report-title-display" style="font-size:14px; margin-bottom:10px; color:var(--primary);"></h3>
                 <div style="font-weight:bold; font-size:12px; color:#1e293b;">🍷 Alcolici & Bevande</div>
                 <table class="report-table" id="table-alcohol-report"><thead><tr><th>Prodotto</th><th>Qtà</th><th>Costo Totale</th></tr></thead><tbody></tbody></table>
@@ -290,24 +284,23 @@
         <!-- 7. FAQ & GUIDA RAPIDA -->
         <div id="view-faq" class="view-section">
             <div class="top-bar-container">
-                <div style="font-size:16px; font-weight:800; color:var(--primary);">❓ Guida Rapida & FAQ Staff</div>
-                <div style="font-size:12px; color:var(--text-secondary);">Manuale operativo completo per lo staff di Vasastan e Östermalm.</div>
+                <div style="font-size:16px; font-weight:800; color:var(--primary);">❓ Guida Rapida & FAQ Staff (v4.1.8)</div>
+                <div style="font-size:12px; color:var(--text-secondary);">Manuale ed indicazioni operative ufficiali per Vasastan ed Östermalm.</div>
             </div>
             <div class="content-list">
                 <div class="faq-item-box">
                     <div class="faq-question">📍 1. Come cambiare la Sede attiva?</div>
                     <div class="faq-answer">
-                        In cima alla schermata o nel banner verde in alto è indicato il locale attivo (<b>Vasastan</b> o <b>Östermalm</b>). Clicca su <b>"Cambia Sede"</b> per switchare. Le giacenze, i minimi scorta e il carrello sono <b>isolati per ciascun locale</b>.
+                        In cima alla schermata è indicato il locale attivo (<b>Vasastan</b> o <b>Östermalm</b>). Clicca su <b>"Cambia Sede"</b> per switchare. Le giacenze, i minimi scorta e il carrello sono <b>isolati per ciascun locale</b>.
                     </div>
                 </div>
 
                 <div class="faq-item-box">
-                    <div class="faq-question">🔑 2. Come effettuare il Login o la Registrazione?</div>
+                    <div class="faq-question">🔑 2. Come funziona il Login e la Registrazione?</div>
                     <div class="faq-answer">
-                        Apri il menu laterale (☰) e clicca sul pulsante blu <b>"🔑 Accedi / Registrati"</b>.<br>
-                        • Inserisci email e password per accedere.<br>
-                        • Spunta <b>"Rimani collegato"</b> se vuoi che l'app ricordi le tue credenziali sul dispositivo senza dovere effettuare l'accesso ogni volta.<br>
-                        • Se sei un nuovo operatore, passa alla scheda <i>"Nuovo Account Staff"</i> per creare il tuo profilo.
+                        Apri il menu laterale (☰) e clicca su <b>"🔑 Accedi / Registrati"</b>.<br>
+                        • Inserisci le credenziali e spunta <b>"Rimani collegato"</b> per memorizzare l'accesso.<br>
+                        • Gli Admin ricevono una notifica in tempo reale quando si registra un nuovo membro dello staff.
                     </div>
                 </div>
 
@@ -315,76 +308,26 @@
                     <div class="faq-question">🛒 3. Come creare ed inviare un Ordine Fornitori?</div>
                     <div class="faq-answer">
                         1. Seleziona la data di consegna prevista in alto alla pagina <b>Ordini</b>.<br>
-                        2. Regola le quantità dei prodotti da ordinare usando i tasti <b>+</b> / <b>-</b>.<br>
-                        3. Clicca in basso su <b>"📋 Genera Riepilogo Ordine"</b>.<br>
-                        4. Dalla finestra potrai inviare la lista in svedese via <b>WhatsApp</b> o <b>Email</b> al singolo fornitore, oppure confermare l'ordine per salvarlo nello storico.
+                        2. Regola le quantità da ordinare con i tasti <b>+</b> / <b>-</b>.<br>
+                        3. Clicca su <b>"📋 Genera Riepilogo Ordine"</b>.<br>
+                        4. Dalla finestra puoi inviare il testo in svedese via <b>WhatsApp</b> o <b>Email</b>.
                     </div>
                 </div>
 
                 <div class="faq-item-box">
-                    <div class="faq-question">✍️ 4. Come verificare una Consegna arrivata e stornare la Scorta?</div>
+                    <div class="faq-question">✍️ 4. Come verificare una Consegna e stornare la Scorta?</div>
                     <div class="faq-answer">
-                        Quando la merce arriva in pizzeria:<br>
-                        1. Vai nella sezione <b>📜 Storico Ordini</b>.<br>
-                        2. Trova l'ordine con il bollino rosso ⚠️ <i>Da Controllare</i>.<br>
+                        1. Vai in <b>📜 Storico Ordini</b>.<br>
+                        2. Trova l'ordine con il bollino ⚠️ <i>Da Controllare</i>.<br>
                         3. Clicca su <b>"✍️ Verifica & Storna"</b>.<br>
-                        4. Controlla le unità arrivate, modifica la quantità se ci sono ammanchi o merci danneggiate e conferma. L'app accrediterà in automatico le quantità nelle giacenze del locale.
+                        4. Conferma le quantità arrivate per accreditarle in automatico nella giacenza del locale.
                     </div>
                 </div>
 
                 <div class="faq-item-box">
-                    <div class="faq-question">📦 5. Come aggiornare le Giacenze in Magazzino?</div>
+                    <div class="faq-question">🎨 5. Palette Colori e Posizionamento Fornitori</div>
                     <div class="faq-answer">
-                        Nella sezione <b>📦 Scorte (Giacenze)</b> puoi modificare manualmente la quantità disponibile in frigo/magazzino. L'app registrerà in automatico <b>chi ha effettuato la modifica e a che ora</b>, mostrando il dato nella scheda del prodotto.
-                    </div>
-                </div>
-
-                <div class="faq-item-box">
-                    <div class="faq-question">🚨 6. Cosa indicano i prodotti evidenziati in rosso?</div>
-                    <div class="faq-answer">
-                        I prodotti bordati di rosso lampeggiante hanno raggiunto o superato il <b>limite minimo di scorta</b> impostato per la sede corrente. Ordinali al più presto per evitare rotture di stock durante il servizio.
-                    </div>
-                </div>
-
-                <div class="faq-item-box">
-                    <div class="faq-question">📊 7. Come scaricare il Report Inventory in Excel?</div>
-                    <div class="faq-answer">
-                        Dalla pagina <b>📦 Scorte</b>, clicca sul pulsante verde <b>"📊 Export Inventory (Excel)"</b>. Potrai scegliere se scaricare il foglio <i>Food & Supplies</i>, il foglio <i>Alcohol & Beverages</i> (con i subtotali separati per alcolici e bibite), oppure l'intero inventario.
-                    </div>
-                </div>
-
-                <div class="faq-item-box">
-                    <div class="faq-question">🐛 8. Come segnalare un bug o un errore nei prezzi/dati?</div>
-                    <div class="faq-answer">
-                        Apri la voce del menu <b>🐛 Segnala Bug & Feedback</b>, seleziona la tipologia di problema, scrivi una breve spiegazione e premi <b>"🚀 Invia Segnalazione"</b>. L'amministratore riceverà la notifica e prenderà in carico la richiesta.
-                    </div>
-                </div>
-
-                <div class="faq-item-box">
-                    <div class="faq-question">📢 9. Come funziona la Bacheca Avvisi Staff?</div>
-                    <div class="faq-answer">
-                        Gli avvisi importanti pubblicati dall'Amministratore appaiono in cima alla schermata principale dentro una card evidenziata. Gli avvisi sono <b>specifici per la sede attiva</b> (Vasastan o Östermalm).
-                    </div>
-                </div>
-
-                <div class="faq-item-box">
-                    <div class="faq-question">⭐ 10. Come gestire ed utilizzare i Prodotti Preferiti?</div>
-                    <div class="faq-answer">
-                        In tutte le sezioni puoi cliccare sulla stellina accanto a un prodotto per contrassegnarlo come preferito. Selezionando l'opzione <b>"⭐ Solo Preferiti"</b> dal filtro categorie, potrai visualizzare al volo gli ingredienti ad altissimo consumo.
-                    </div>
-                </div>
-
-                <div class="faq-item-box">
-                    <div class="faq-question">🍷 11. Come funziona la distinzione Alcolici / Bevande negli Excel e Report?</div>
-                    <div class="faq-answer">
-                        Gli alcolici e le bevande analcoliche vengono gestiti con due subtotali separati ed un gran totale unificato, permettendo un controllo contabile e di licenza preciso per ogni sede.
-                    </div>
-                </div>
-
-                <div class="faq-item-box">
-                    <div class="faq-question">🔄 12. Come recuperare o modificare le credenziali dell'account?</div>
-                    <div class="faq-answer">
-                        Gli amministratori possono aggiornare ruoli e nomi dal pannello <b>⚙️ Impostazioni</b>. Se hai dimenticato la password, puoi richiedere all'Admin il ripristino o ricreare il tuo profilo.
+                        La vista fornitori dispone di una palette a 12 tonalità nitide ad alto contrasto. Con le frecce ⬆️ ⬇️ puoi riordinare la lista per portare in cima i fornitori usati quotidianamente.
                     </div>
                 </div>
             </div>
@@ -410,17 +353,17 @@
                 <div class="page-lock-box"><div style="font-size: 32px; margin-bottom: 8px;">🔒</div><h3 style="margin-bottom: 6px;">Sezione Riservata Admin</h3><p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">Effettua il Login con account Admin per accedere.</p><button class="btn-save" onclick="openAuthModal()">Accedi come Admin</button></div>
             </div>
             <div class="settings-card">
-                <h3>⚙️ Gestione Avanzata Impostazioni</h3>
+                <h3>⚙️ Gestione Avanzata Impostazioni (v4.1.8 STABLE)</h3>
 
                 <!-- PUBBLICAZIONE AVVISO STAFF -->
-                <div style="background:#fffbe8; border:1px solid #ffe0b2; padding:12px; border-radius:8px; margin-top:8px;">
+                <div style="background:#fffbe8; border:1px solid #ffe0b2; padding:12px; border-radius:10px; margin-top:8px;">
                     <h4 style="font-size:14px; color:#b45309; margin-bottom:6px;">📢 Pubblica Banner Avviso Staff</h4>
                     <textarea id="notice-input-field" class="form-control" rows="2" placeholder="Scrivi un avviso per la bacheca staff..."></textarea>
                     <button onclick="publishStaffNotice()" class="btn-save" style="width:100%; margin-top:8px; background:#b45309;">Pubblica Avviso</button>
                 </div>
 
                 <!-- 👥 PANNELLO GESTIONE STAFF -->
-                <div style="background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #cbd5e1; margin-top:8px;">
+                <div style="background:#f8fafc; padding:12px; border-radius:10px; border:1px solid #cbd5e1; margin-top:8px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                         <h4 style="font-size:14px; color:var(--primary);">👥 Gestione Operatori Staff</h4>
                         <div style="display:flex; gap:6px;">
@@ -446,7 +389,7 @@
 
         <!-- FOOTER FIRMA DEVELOPER -->
         <footer style="background:#043927; color:#c8e6c9; text-align:center; padding:16px 14px; font-size:11px; border-top:1px solid #1b5e20; margin-top:auto; width:100%; position:relative; z-index:80;">
-            <div>&copy; 2026 <b>Magari Pizzeria Stockholm</b> - Versione Ufficiale Stabile</div>
+            <div>&copy; 2026 <b>Magari Pizzeria Stockholm</b> - Versione Ufficiale <span style="background:rgba(255,255,255,0.15); padding:2px 6px; border-radius:4px; font-weight:bold;">v4.1.8 STABLE</span></div>
             <div style="margin-top:6px; font-size:11px; color:#ffffff;">
                 App sviluppata da <span style="color:#f59e0b; font-weight:bold; background:rgba(0,0,0,0.3); padding:2px 6px; border-radius:4px; border:1px solid rgba(245,158,11,0.3);">Nicolas Cappiello</span>
             </div>
@@ -475,7 +418,7 @@
         </div>
     </div>
 
-    <!-- MODALE AUTHENTICATION CON CHECKBOX "RIMANI COLLEGATO" -->
+    <!-- MODALE AUTHENTICATION -->
     <div class="modal" id="auth-modal">
         <div class="modal-title" id="auth-modal-title" style="text-align:center;">🔑 Accedi a Magari Pizzeria</div>
         <div style="display:flex; justify-content:center; gap:10px; margin-bottom:12px;">
@@ -485,22 +428,39 @@
 
         <div id="auth-form-login">
             <div class="form-group"><label>Email</label><input type="email" id="login-email" class="form-control" placeholder="es. marco@magaripizza.com"></div>
-            <div class="form-group"><label>Password</label><input type="password" id="login-password" class="form-control" placeholder="••••••••"></div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="login-password" class="form-control" placeholder="••••••••">
+            </div>
             
-            <!-- CHECKBOX RIMANI COLLEGATO -->
-            <div style="display:flex; align-items:center; gap:8px; margin:10px 0 4px 0;">
-                <input type="checkbox" id="remember-me-checkbox" checked style="width:18px; height:18px; accent-color:var(--primary); cursor:pointer;">
-                <label for="remember-me-checkbox" style="font-size:13px; font-weight:600; color:#334155; cursor:pointer; user-select:none;">Rimani collegato su questo dispositivo</label>
+            <div style="display:flex; align-items:center; justify-content:space-between; margin:8px 0 10px 0;">
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <input type="checkbox" id="show-login-password" onclick="togglePasswordVisibility('login-password')" style="width:16px; height:16px; accent-color:var(--primary); cursor:pointer;">
+                    <label for="show-login-password" style="font-size:12px; font-weight:600; color:#334155; cursor:pointer; user-select:none;">Mostra Password</label>
+                </div>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <input type="checkbox" id="remember-me-checkbox" checked style="width:16px; height:16px; accent-color:var(--primary); cursor:pointer;">
+                    <label for="remember-me-checkbox" style="font-size:12px; font-weight:600; color:#334155; cursor:pointer; user-select:none;">Rimani collegato</label>
+                </div>
             </div>
 
-            <button class="btn-save" onclick="handleLoginSubmit()" style="width:100%; padding:10px; margin-top:8px;">Entra</button>
+            <button class="btn-save" onclick="handleLoginSubmit()" style="width:100%; padding:10px; margin-top:4px;">Entra</button>
         </div>
 
         <div id="auth-form-register" style="display:none;">
             <div class="form-group"><label>Nome e Cognome (Firma Operatore)</label><input type="text" id="reg-name" class="form-control" placeholder="es. Marco Rossi"></div>
             <div class="form-group"><label>Email</label><input type="email" id="reg-email" class="form-control" placeholder="es. marco@magaripizza.com"></div>
-            <div class="form-group"><label>Password</label><input type="password" id="reg-password" class="form-control" placeholder="Min. 6 caratteri"></div>
-            <button class="btn-save" onclick="handleRegisterSubmit()" style="width:100%; padding:10px; background:#1b5e20; margin-top:6px;">Crea Account Staff</button>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="reg-password" class="form-control" placeholder="Min. 6 caratteri">
+            </div>
+            
+            <div style="display:flex; align-items:center; gap:6px; margin:6px 0 10px 0;">
+                <input type="checkbox" id="show-reg-password" onclick="togglePasswordVisibility('reg-password')" style="width:16px; height:16px; accent-color:var(--primary); cursor:pointer;">
+                <label for="show-reg-password" style="font-size:12px; font-weight:600; color:#334155; cursor:pointer; user-select:none;">Mostra Password</label>
+            </div>
+
+            <button class="btn-save" onclick="handleRegisterSubmit()" style="width:100%; padding:10px; background:#1b5e20; margin-top:4px;">Crea Account Staff</button>
         </div>
 
         <div class="modal-actions" style="margin-top:12px;"><button class="btn-cancel" onclick="closeAuthModal()" style="width:100%;">Annulla</button></div>
@@ -543,11 +503,24 @@
         <div class="modal-actions"><button class="btn-cancel" onclick="closeAddModal()">Annulla</button><button class="btn-save" onclick="saveInventoryItem()">Salva</button></div>
     </div>
 
+    <!-- MODALE FORNITORE CON SELETTORE PALETTE A 12 COLORI -->
     <div class="modal" id="add-supplier-modal">
         <div class="modal-title" id="supplier-modal-title">Fornitore</div>
         <input type="hidden" id="edit-supplier-id">
-        <div class="form-group"><label>Nome</label><input type="text" id="supp-name" class="form-control"></div>
-        <div class="form-group"><label>Colore</label><input type="color" id="supp-color-input" class="form-control" value="#1976d2"></div>
+        <input type="hidden" id="supp-color-val" value="#1565c0">
+        
+        <div class="form-group"><label>Nome Fornitore</label><input type="text" id="supp-name" class="form-control"></div>
+        
+        <div class="form-group">
+            <label style="font-weight:bold; color:var(--primary);">🎨 Scegli Colore Identificativo:</label>
+            <div id="supplier-color-palette-grid" style="display:grid; grid-template-columns: repeat(6, 1fr); gap:8px; margin-top:6px; background:#f8fafc; padding:8px; border-radius:8px; border:1px solid #cbd5e1;"></div>
+        </div>
+
+        <div style="margin-bottom:12px;">
+            <label style="font-size:11px; color:#666;">Anteprima Badge Visivo:</label>
+            <div id="supplier-color-preview-badge" style="padding:6px 12px; border-radius:6px; font-weight:800; font-size:12px; display:inline-block; margin-top:4px;">🚚 Anteprima Fornitore</div>
+        </div>
+
         <div class="form-group"><label>Telefono</label><input type="tel" id="supp-phone" class="form-control"></div>
         <div class="form-group"><label>Email</label><input type="email" id="supp-email" class="form-control"></div>
         <div class="modal-actions"><button class="btn-cancel" onclick="closeAddSupplierModal()">Annulla</button><button class="btn-save" onclick="saveSupplier()">Salva</button></div>
@@ -605,7 +578,7 @@
         }
         .card-item.low-stock-alert { border: 2px solid var(--danger); background-color: #fff8f8; animation: pulseBorder 1.5s infinite; }
 
-        .item-name-box { padding: 10px 12px; border-radius: 6px; display: flex; flex-direction: column; gap: 4px; border-left-width: 4px; border-left-style: solid; }
+        .item-name-box { padding: 10px 12px; border-radius: 6px; display: flex; flex-direction: column; gap: 4px; border-left-width: 4px; border-left-style: solid; background: #faf8f5; }
         .item-name { font-size: 18px; font-weight: 800; color: #111111; line-height: 1.25; display: flex; align-items: center; justify-content: space-between; width: 100%; }
         .item-subtext { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
 
@@ -634,7 +607,6 @@
         .faq-question { font-size: 14px; font-weight: 800; color: var(--primary); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
         .faq-answer { font-size: 13px; color: #334155; line-height: 1.4; }
 
-        /* MENU DRAWER PASTELLO */
         .drawer { position: absolute; top: 0; left: -280px; width: 280px; height: 100%; min-height: 100vh; background-color: #faf8f5; box-shadow: 4px 0 15px rgba(0,0,0,0.15); transition: left 0.3s ease; z-index: 2000; padding: 20px; overflow-y: auto; border-right: 1px solid #e6e2d8; }
         .drawer.open { left: 0; }
         .drawer-header { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 16px; border-bottom: 1px solid #1b4332; background-color: var(--primary); border-radius: 10px; padding: 16px 12px; }
@@ -645,7 +617,6 @@
         .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; min-height: 100vh; background: rgba(0,0,0,0.6); display: none; z-index: 1000; backdrop-filter: blur(4px); }
         .overlay.active { display: block; }
 
-        /* MODALI POPUP PASTELLO */
         .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fdfcf7; padding: 22px; border-radius: 14px; width: 92%; max-width: 480px; max-height: 88vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: none; z-index: 9999; border: 1px solid #e2ded4; }
         .modal.active { display: block !important; }
         
@@ -724,7 +695,9 @@
             collection, 
             updateDoc, 
             deleteDoc, 
-            writeBatch 
+            writeBatch,
+            query,
+            where
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         // CONFIGURAZIONE FIREBASE AMBIENTE UFFICIALE PRODUZIONE (magari-b7f93)
@@ -746,18 +719,34 @@
         window.activeLocation = null;
         window.activeVerifyHistoryId = null;
 
+        // PALETTE CURATA A 12 COLORI UNICI E DISTINTI
+        window.supplierColorPalette = [
+            { name: "Rosso Pomodoro", hex: "#dc2626", textColor: "#ffffff" },
+            { name: "Arancio Agrumi", hex: "#ea580c", textColor: "#ffffff" },
+            { name: "Giallo Ocra", hex: "#d97706", textColor: "#ffffff" },
+            { name: "Verde Smeraldo", hex: "#166534", textColor: "#ffffff" },
+            { name: "Verde Oliva", hex: "#65a30d", textColor: "#ffffff" },
+            { name: "Blu Cobalto", hex: "#1d4ed8", textColor: "#ffffff" },
+            { name: "Celeste", hex: "#0288d1", textColor: "#ffffff" },
+            { name: "Viola Melanzana", hex: "#7e22ce", textColor: "#ffffff" },
+            { name: "Rosa Magenta", hex: "#be185d", textColor: "#ffffff" },
+            { name: "Marrone Tostato", hex: "#78350f", textColor: "#ffffff" },
+            { name: "Antracite", hex: "#334155", textColor: "#ffffff" },
+            { name: "Borgogna", hex: "#881337", textColor: "#ffffff" }
+        ];
+
         window.defaultSuppliers = [
-            { id: 1700000001, name: "Paolo's Tiramisu", phone: "0764211121", email: "paolo@tiramisusthlm.se", color: "#f57c00" },
-            { id: 1700000002, name: "Divinoil Antica Bottega", phone: "0708223715", email: "info@divinoil.com", color: "#5d4037" },
-            { id: 1700000003, name: "D'ABRAMO Group AB", phone: "0701499424", email: "linnea@dabramo.se", color: "#6d4c41" },
-            { id: 1700000004, name: "Martin & Servera", phone: "08-6978300", email: "", color: "#1565c0" },
-            { id: 1700000005, name: "Don Bibbo AB", phone: "08-7224930", email: "info@donbibbo.com", color: "#e65100" },
-            { id: 1700000006, name: "Daniele FG AB", phone: "0704959768", email: "gino.daniele@hotmail.com", color: "#43a047" },
-            { id: 1700000007, name: "Jansson Fisk AB", phone: "08-310772", email: "janssonsfisk@gmail.com", color: "#0288d1" },
-            { id: 1700000008, name: "Östkustens Smak AB", phone: "0728758967", email: "ostkustenleverans@gmail.com", color: "#d81b60" },
-            { id: 1700000009, name: "Villa Aurum", phone: "", email: "", color: "#795548" },
-            { id: 1700000010, name: "Stellan Kramer", phone: "", email: "", color: "#8e24aa" },
-            { id: 1700000011, name: "Ekerö Brygghus AB", phone: "0768837808", email: "kerryn@ekerobrygghus.se", color: "#00897b" }
+            { id: 1700000001, name: "Paolo's Tiramisu", phone: "0764211121", email: "paolo@tiramisusthlm.se", color: "#ea580c", orderIndex: 1 },
+            { id: 1700000002, name: "Divinoil Antica Bottega", phone: "0708223715", email: "info@divinoil.com", color: "#78350f", orderIndex: 2 },
+            { id: 1700000003, name: "D'ABRAMO Group AB", phone: "0701499424", email: "linnea@dabramo.se", color: "#d97706", orderIndex: 3 },
+            { id: 1700000004, name: "Martin & Servera", phone: "08-6978300", email: "", color: "#1d4ed8", orderIndex: 4 },
+            { id: 1700000005, name: "Don Bibbo AB", phone: "08-7224930", email: "info@donbibbo.com", color: "#dc2626", orderIndex: 5 },
+            { id: 1700000006, name: "Daniele FG AB", phone: "0704959768", email: "gino.daniele@hotmail.com", color: "#166534", orderIndex: 6 },
+            { id: 1700000007, name: "Jansson Fisk AB", phone: "08-310772", email: "janssonsfisk@gmail.com", color: "#0288d1", orderIndex: 7 },
+            { id: 1700000008, name: "Östkustens Smak AB", phone: "0728758967", email: "ostkustenleverans@gmail.com", color: "#be185d", orderIndex: 8 },
+            { id: 1700000009, name: "Villa Aurum", phone: "", email: "", color: "#7e22ce", orderIndex: 9 },
+            { id: 1700000010, name: "Stellan Kramer", phone: "", email: "", color: "#334155", orderIndex: 10 },
+            { id: 1700000011, name: "Ekerö Brygghus AB", phone: "0768837808", email: "kerryn@ekerobrygghus.se", color: "#65a30d", orderIndex: 11 }
         ];
 
         window.suppliersData = [...window.defaultSuppliers];
@@ -765,7 +754,99 @@
         window.orderHistoryData = [];
         window.bugReportsData = [];
 
-        // MONITORAGGIO STATO AUTENTICAZIONE UTENTE
+        // HELPERS GENERALI E MULTI-SEDE
+        window.getLocationKey = () => (window.activeLocation && window.activeLocation.includes('Östermalm')) ? 'ostermalm' : 'vasastan';
+        window.getQty = (i) => window.getLocationKey() === 'ostermalm' ? (i.qty_ostermalm ?? 0) : (i.qty_vasastan ?? i.qty ?? 0);
+        window.getOrderQty = (i) => window.getLocationKey() === 'ostermalm' ? (i.orderQty_ostermalm ?? 0) : (i.orderQty_vasastan ?? i.orderQty ?? 0);
+        window.getMin = (i) => window.getLocationKey() === 'ostermalm' ? (i.minQty_ostermalm ?? 2) : (i.minQty_vasastan ?? i.minQty ?? 2);
+        window.getLastUpdateBy = (i) => window.getLocationKey() === 'ostermalm' ? (i.lastUpdateBy_ostermalm ?? '') : (i.lastUpdateBy_vasastan ?? '');
+        window.getLastUpdateDate = (i) => window.getLocationKey() === 'ostermalm' ? (i.lastUpdateDate_ostermalm ?? '') : (i.lastUpdateDate_vasastan ?? '');
+
+        window.getStockUpdatesObj = function(newQty, opName) {
+            const key = window.getLocationKey();
+            const nowStr = new Date().toISOString(); 
+            const displayStr = new Date().toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            if (key === 'ostermalm') return { qty_ostermalm: newQty, lastUpdateBy_ostermalm: opName, lastUpdateDate_ostermalm: displayStr, lastUpdateRaw_ostermalm: nowStr };
+            return { qty_vasastan: newQty, lastUpdateBy_vasastan: opName, lastUpdateDate_vasastan: displayStr, lastUpdateRaw_vasastan: nowStr };
+        };
+
+        window.translateUnitToSwedish = (unit) => ({ "Bottiglie": "flaskor", "Unità": "st", "Kg": "kg", "Litri": "liter", "Cartoni": "kartonger", "Sacchi": "säckar" }[unit] || unit || "st");
+        window.getCategoryEmoji = (cat) => ({ "Latticini": "🧀", "Farine & Secco": "🌾", "Conserve & Pomodoro": "🍅", "Salumi & Carni": "🥩", "Alcolici": "🍷", "Bevande": "🥤", "Surgelati": "❄", "Ortofrutta": "🥗", "Pulizia & Monouso": "🧹", "Altro": "📦" }[cat] || "📦");
+
+        window.togglePasswordVisibility = function(inputId) {
+            const field = document.getElementById(inputId);
+            if (field) {
+                field.type = field.type === 'password' ? 'text' : 'password';
+            }
+        };
+
+        window.setActiveLocation = function(loc) {
+            window.activeLocation = loc;
+            const guardBanner = document.getElementById('location-guard-banner');
+            if (guardBanner) guardBanner.style.display = 'none';
+            
+            const activeTxt = document.getElementById('active-location-text');
+            if (activeTxt) activeTxt.innerText = `📍 Sede: ${loc}`;
+            
+            const activeBanner = document.getElementById('active-location-banner');
+            if (activeBanner) activeBanner.style.display = 'flex';
+            
+            const bugLocInput = document.getElementById('bug-location-display');
+            if (bugLocInput) bugLocInput.value = loc;
+            
+            if (typeof window.listenToStaffNotice === 'function') window.listenToStaffNotice();
+            if (typeof window.refreshAllViews === 'function') window.refreshAllViews();
+        };
+
+        window.promptChangeLocation = () => {
+            const guardBanner = document.getElementById('location-guard-banner');
+            if (guardBanner) guardBanner.style.display = 'flex';
+        };
+
+        window.toggleMenu = () => { 
+            const drawer = document.getElementById('drawer');
+            const overlay = document.getElementById('overlay');
+            if (drawer) drawer.classList.toggle('open'); 
+            if (overlay) overlay.classList.toggle('active'); 
+        };
+
+        window.closeAll = () => { 
+            document.querySelectorAll('.modal').forEach(m => m.classList.remove('active')); 
+            const overlay = document.getElementById('overlay');
+            const drawer = document.getElementById('drawer');
+            if (overlay) overlay.classList.remove('active'); 
+            if (drawer) drawer.classList.remove('open'); 
+        };
+
+        // NAVIGAZIONE TRA LE VISTE
+        window.navigateTo = function(sec) {
+            const adminProtectedSections = ['magazzino', 'fornitori', 'sprechi', 'impostazioni'];
+            const isAdmin = window.currentUserProfile && window.currentUserProfile.role === 'admin';
+
+            window.closeAll();
+
+            if (adminProtectedSections.includes(sec) && !isAdmin) {
+                window.showAlert("🔒 Sezione Riservata Admin: Effettua il Login.");
+                setTimeout(() => { window.openAuthModal(); }, 150);
+                return;
+            }
+
+            document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+            const targetSec = document.getElementById(`view-${sec}`);
+            if (targetSec) targetSec.classList.add('active');
+            
+            const titles = { 'ordini': 'Ordini', 'scorte': 'Scorte', 'storico': 'Storico Ordini', 'magazzino': 'Magazzino', 'fornitori': 'Fornitori', 'sprechi': 'Report Consumi', 'faq': 'Guida & FAQ', 'bugreport': 'Segnala Bug', 'impostazioni': 'Impostazioni' };
+            const pageTitle = document.getElementById('page-title');
+            if (pageTitle) pageTitle.innerText = titles[sec] || 'Magari';
+            
+            window.scrollTo({ top: 0, behavior: 'instant' });
+
+            if (sec === 'impostazioni' && isAdmin) {
+                window.loadUsersListForAdmin();
+            }
+        };
+
+        // MONITORAGGIO AUTENTICAZIONE UTENTE
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const isMasterAdmin = user.email && user.email.toLowerCase() === "nicolas@magaripizza.com";
@@ -798,47 +879,88 @@
                 window.currentUserProfile = null;
             }
             window.updateAuthUIState();
+            window.listenToPersistentUserNotifications();
             window.refreshAllViews();
         });
 
-        // NOTIFICATORE POPUP REALTIME PER NUOVE REGISTRAZIONS STAFF
-        let isInitialUsersLoad = true;
-        onSnapshot(collection(db, "users"), (snapshot) => {
-            if (isInitialUsersLoad) {
-                isInitialUsersLoad = false;
+        // NOTIFICHE PERSISTENTI NUOVI REGISTRATI (FIRESTORE BACKED)
+        window.activeNotificationsUnsubscribe = null;
+
+        window.listenToPersistentUserNotifications = function() {
+            if (window.activeNotificationsUnsubscribe) {
+                window.activeNotificationsUnsubscribe();
+            }
+
+            const currentUser = window.currentUserProfile;
+            const isMaster = currentUser && currentUser.email && currentUser.email.toLowerCase() === "nicolas@magaripizza.com";
+            const isAdmin = isMaster || (currentUser && currentUser.role === 'admin');
+
+            const container = document.getElementById('realtime-user-toast-container');
+            if (!container) return;
+
+            if (!isAdmin) {
+                container.innerHTML = '';
                 return;
             }
-            snapshot.docChanges().forEach((change) => {
-                if (change.type === "added") {
-                    const newUser = change.doc.data();
-                    window.showRealtimeUserToast(newUser.name || newUser.email || "Nuovo Operatore");
-                }
-            });
-        });
 
-        window.showRealtimeUserToast = function(identifier) {
+            const q = query(collection(db, "notifications"), where("status", "==", "unread"));
+            
+            window.activeNotificationsUnsubscribe = onSnapshot(q, (snapshot) => {
+                container.innerHTML = '';
+                snapshot.docs.forEach((docSnap) => {
+                    const notif = docSnap.data();
+                    const notifId = docSnap.id;
+                    window.renderPersistentUserToast(notifId, notif.userName || notif.email || "Nuovo Operatore", notif.timestamp);
+                });
+            });
+        };
+
+        window.renderPersistentUserToast = function(notifId, identifier, timestamp) {
             const container = document.getElementById('realtime-user-toast-container');
             if (!container) return;
 
             const toast = document.createElement('div');
+            toast.id = `toast-notif-${notifId}`;
             toast.style.cssText = `
-                background-color: #1b5e20;
+                background: linear-gradient(135deg, #043927, #1b5e20);
                 color: white;
-                padding: 12px 18px;
-                border-radius: 8px;
+                padding: 12px 16px;
+                border-radius: 12px;
                 font-size: 13px;
                 font-weight: bold;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-                border-left: 5px solid #81c784;
-                transition: opacity 0.3s ease;
+                box-shadow: 0 8px 20px rgba(4, 57, 39, 0.4);
+                border: 1px solid #a7f3d0;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+                width: 100%;
+                animation: slideDown 0.3s ease;
             `;
-            toast.innerHTML = `🔔 <strong>Nuovo Account Staff:</strong> Si è registrato ${identifier}`;
+            
+            toast.innerHTML = `
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span style="font-size:20px;">🔔</span>
+                    <div>
+                        <div style="font-size:10px; text-transform:uppercase; opacity:0.9; color:#a7f3d0; font-weight:800;">Nuova Registrazione Staff</div>
+                        <div style="margin-top:2px; font-size:13px;">Si è registrato <u>${identifier}</u></div>
+                        ${timestamp ? `<div style="font-size:10px; opacity:0.8; margin-top:2px; font-weight:normal;">🕒 ${timestamp}</div>` : ''}
+                    </div>
+                </div>
+                <button onclick="dismissUserNotification('${notifId}')" title="Segna come letto" style="background:rgba(255,255,255,0.2); border:none; color:white; width:26px; height:26px; border-radius:50%; font-weight:bold; cursor:pointer; font-size:13px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">✕</button>
+            `;
 
             container.appendChild(toast);
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                setTimeout(() => toast.remove(), 300);
-            }, 5000);
+        };
+
+        window.dismissUserNotification = async function(notifId) {
+            try {
+                await updateDoc(doc(db, "notifications", notifId), { status: "read", dismissedBy: window.currentUserProfile?.name || 'Admin' });
+                const el = document.getElementById(`toast-notif-${notifId}`);
+                if (el) el.remove();
+            } catch(e) {
+                console.error("Errore rimozione notifica:", e);
+            }
         };
 
         window.updateAuthUIState = function() {
@@ -854,7 +976,7 @@
                 const roleBadge = isAdmin ? '⭐ Admin' : '👤 Operatore';
 
                 if (statusTxt) statusTxt.innerHTML = `${roleBadge}: <b>${window.currentUserProfile.name}</b>`;
-                if (authBtn) { authBtn.innerText = '🚪 Logout'; authBtn.style.background = '#e53935'; authBtn.onclick = window.handleLogoutSubmit; }
+                if (authBtn) { authBtn.innerText = '🚪 Logout'; authBtn.style.background = 'linear-gradient(135deg, #dc2626, #b91c1c)'; authBtn.onclick = window.handleLogoutSubmit; }
                 if (btnDeleteNotice) btnDeleteNotice.style.display = isAdmin ? 'inline-block' : 'none';
                 
                 const opText = window.currentUserProfile.name;
@@ -868,7 +990,7 @@
                 });
             } else {
                 if (statusTxt) statusTxt.innerHTML = '👁️ Modalità Lettura (Guest)';
-                if (authBtn) { authBtn.innerText = '🔑 Accedi / Registrati'; authBtn.style.background = '#2563eb'; authBtn.onclick = window.openAuthModal; }
+                if (authBtn) { authBtn.innerText = '🔑 Accedi / Registrati'; authBtn.style.background = 'linear-gradient(135deg, #2563eb, #1d4ed8)'; authBtn.onclick = window.openAuthModal; }
                 if (btnDeleteNotice) btnDeleteNotice.style.display = 'none';
                 
                 if (opOrderInput) opOrderInput.value = '👁 Nessun Operatore (Accedi)';
@@ -891,13 +1013,12 @@
             return true;
         };
 
-        // NOTIFICHE TOAST
         window.showAlert = function(msg) {
             const toast = document.getElementById('toast-notification');
             if (toast) { toast.innerText = msg; toast.classList.add('show'); setTimeout(() => { toast.classList.remove('show'); }, 3500); }
         };
 
-        // LISTENERS AVVISI STAFF SEPARATI PER SEDE
+        // LISTENERS AVVISI STAFF
         window.activeNoticeUnsubscribe = null;
 
         window.listenToStaffNotice = function() {
@@ -952,15 +1073,19 @@
             window.showAlert(`🗑️ Avviso rimosso per ${window.activeLocation || locKey}.`);
         };
 
-        // MODALE AUTHENTICATION (LOGIN CON PERSISTENCE & REGISTRAZIONE)
+        // AUTH MODAL LOGIC
         window.openAuthModal = () => { 
             window.closeAll();
-            document.getElementById('auth-modal').classList.add('active'); 
-            document.getElementById('overlay').classList.add('active'); 
+            const modal = document.getElementById('auth-modal');
+            const overlay = document.getElementById('overlay');
+            if (modal) modal.classList.add('active'); 
+            if (overlay) overlay.classList.add('active'); 
         };
         window.closeAuthModal = () => { 
-            document.getElementById('auth-modal').classList.remove('active'); 
-            document.getElementById('overlay').classList.remove('active'); 
+            const modal = document.getElementById('auth-modal');
+            const overlay = document.getElementById('overlay');
+            if (modal) modal.classList.remove('active'); 
+            if (overlay) overlay.classList.remove('active'); 
         };
 
         window.switchAuthTab = function(tab) {
@@ -1009,6 +1134,18 @@
                 
                 await setDoc(doc(db, "users", res.user.uid), newUser);
 
+                // NOTIFICA PERSISTENTE IN FIRESTORE PER L'ADMIN
+                const notifId = `reg_${Date.now()}`;
+                const nowDisplay = new Date().toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                await setDoc(doc(db, "notifications", notifId), {
+                    id: notifId,
+                    type: "new_registration",
+                    userName: name,
+                    email: email,
+                    status: "unread",
+                    timestamp: nowDisplay
+                });
+
                 closeAuthModal(); 
                 window.showAlert("🎉 Account registrato ed attivo!");
             } catch(e) { window.showAlert(`❌ Errore Registrazione: ${e.message}`); }
@@ -1019,7 +1156,7 @@
             window.showAlert("🚪 Logout effettuato.");
         };
 
-        // PANNELLO GESTIONE STAFF IN IMPOSTAZIONI
+        // GESTIONE STAFF IN ADMIN
         window.loadUsersListForAdmin = async function() {
             const container = document.getElementById('admin-users-list-container');
             if (!container) return;
@@ -1055,7 +1192,7 @@
                         <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:8px; padding:10px; display:flex; flex-direction:column; gap:6px; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
                             <div style="display:flex; justify-content:space-between; align-items:center;">
                                 <div>
-                                    <div style="font-weight:bold; color:var(--primary, #1e293b); font-size:13px;">${uData.name || 'Senza Nome'}</div>
+                                    <div style="font-weight:bold; color:var(--primary); font-size:13px;">${uData.name || 'Senza Nome'}</div>
                                     <div style="font-size:11px; color:#64748b;">${uData.email || 'N/D'}</div>
                                 </div>
                                 <div style="font-size:11px; font-weight:600; background:#f1f5f9; padding:2px 8px; border-radius:12px; color:#334155;">${roleBadge}</div>
@@ -1129,7 +1266,7 @@
                 try {
                     const res = await createUserWithEmailAndPassword(auth, email, pass);
                     await setDoc(doc(db, "users", res.user.uid), { uid: res.user.uid, name, email, role });
-                    window.showAlert("🎉 Nuovo operatore creato con successo!");
+                    window.showAlert("🎉 Nuovo operatore creato!");
                 } catch(e) {
                     return window.showAlert(`❌ Errore Creazione: ${e.message}`);
                 }
@@ -1148,14 +1285,17 @@
             }
         };
 
-        // LISTENERS FIRESTORE IN TEMPO REALE
+        // LISTENERS FIRESTORE REALTIME
         onSnapshot(collection(db, "inventory"), (snapshot) => {
             window.inventoryData = snapshot.docs.map(doc => doc.data());
             window.refreshAllViews();
         });
 
         onSnapshot(collection(db, "suppliers"), (snapshot) => {
-            if(!snapshot.empty) window.suppliersData = snapshot.docs.map(doc => doc.data());
+            if(!snapshot.empty) {
+                window.suppliersData = snapshot.docs.map(doc => doc.data());
+                window.suppliersData.sort((a, b) => (a.orderIndex || 999) - (b.orderIndex || 999));
+            }
             window.populateAllSupplierFilters();
             window.refreshAllViews();
         });
@@ -1169,108 +1309,6 @@
             window.bugReportsData = snapshot.docs.map(doc => doc.data()).sort((a, b) => b.id - a.id);
             window.refreshAllViews();
         });
-
-        // HELPERS GENERALI
-        window.getLocationKey = () => (window.activeLocation && window.activeLocation.includes('Östermalm')) ? 'ostermalm' : 'vasastan';
-        window.getQty = (i) => window.getLocationKey() === 'ostermalm' ? (i.qty_ostermalm ?? 0) : (i.qty_vasastan ?? i.qty ?? 0);
-        window.getOrderQty = (i) => window.getLocationKey() === 'ostermalm' ? (i.orderQty_ostermalm ?? 0) : (i.orderQty_vasastan ?? i.orderQty ?? 0);
-        window.getMin = (i) => window.getLocationKey() === 'ostermalm' ? (i.minQty_ostermalm ?? 2) : (i.minQty_vasastan ?? i.minQty ?? 2);
-        window.getLastUpdateBy = (i) => window.getLocationKey() === 'ostermalm' ? (i.lastUpdateBy_ostermalm ?? '') : (i.lastUpdateBy_vasastan ?? '');
-        window.getLastUpdateDate = (i) => window.getLocationKey() === 'ostermalm' ? (i.lastUpdateDate_ostermalm ?? '') : (i.lastUpdateDate_vasastan ?? '');
-
-        window.getStockUpdatesObj = function(newQty, opName) {
-            const key = window.getLocationKey();
-            const nowStr = new Date().toISOString(); 
-            const displayStr = new Date().toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-            if (key === 'ostermalm') return { qty_ostermalm: newQty, lastUpdateBy_ostermalm: opName, lastUpdateDate_ostermalm: displayStr, lastUpdateRaw_ostermalm: nowStr };
-            return { qty_vasastan: newQty, lastUpdateBy_vasastan: opName, lastUpdateDate_vasastan: displayStr, lastUpdateRaw_vasastan: nowStr };
-        };
-
-        window.translateUnitToSwedish = (unit) => ({ "Bottiglie": "flaskor", "Unità": "st", "Kg": "kg", "Litri": "liter", "Cartoni": "kartonger", "Sacchi": "säckar" }[unit] || unit || "st");
-        window.getCategoryEmoji = (cat) => ({ "Latticini": "🧀", "Farine & Secco": "🌾", "Conserve & Pomodoro": "🍅", "Salumi & Carni": "🥩", "Alcolici": "🍷", "Bevande": "🥤", "Surgelati": "❄", "Ortofrutta": "🥗", "Pulizia & Monouso": "🧹", "Altro": "📦" }[cat] || "📦");
-
-        window.setActiveLocation = function(loc) {
-            window.activeLocation = loc;
-            document.getElementById('location-guard-banner').style.display = 'none';
-            document.getElementById('active-location-text').innerText = `📍 Sede: ${loc}`;
-            document.getElementById('active-location-banner').style.display = 'flex';
-            const bugLocInput = document.getElementById('bug-location-display');
-            if (bugLocInput) bugLocInput.value = loc;
-            if (typeof window.listenToStaffNotice === 'function') window.listenToStaffNotice();
-            window.refreshAllViews();
-        };
-
-        window.promptChangeLocation = () => document.getElementById('location-guard-banner').style.display = 'flex';
-        window.toggleMenu = () => { document.getElementById('drawer').classList.toggle('open'); document.getElementById('overlay').classList.toggle('active'); };
-
-        window.toggleReportPeriodInputs = function() {
-            const type = document.getElementById('report-period-type')?.value;
-            const monthGroup = document.getElementById('report-month-select-group');
-            if (monthGroup) {
-                monthGroup.style.display = (type === 'month') ? 'block' : 'none';
-            }
-        };
-        window.closeAll = () => { 
-            document.querySelectorAll('.modal').forEach(m => m.classList.remove('active')); 
-            document.getElementById('overlay').classList.remove('active'); 
-            document.getElementById('drawer').classList.remove('open'); 
-        };
-
-        // NAVIGAZIONE
-        window.navigateTo = function(sec) {
-            const adminProtectedSections = ['magazzino', 'fornitori', 'sprechi', 'impostazioni'];
-            const isAdmin = window.currentUserProfile && window.currentUserProfile.role === 'admin';
-
-            window.closeAll();
-
-            if (adminProtectedSections.includes(sec) && !isAdmin) {
-                window.showAlert("🔒 Sezione Riservata Admin: Effettua il Login.");
-                setTimeout(() => { window.openAuthModal(); }, 150);
-                return;
-            }
-
-            document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
-            document.getElementById(`view-${sec}`).classList.add('active');
-            
-            const titles = { 'ordini': 'Ordini', 'scorte': 'Scorte', 'storico': 'Storico', 'magazzino': 'Magazzino', 'fornitori': 'Fornitori', 'sprechi': 'Report Consumi', 'faq': 'Guida & FAQ', 'bugreport': 'Segnala Bug', 'impostazioni': 'Impostazioni' };
-            document.getElementById('page-title').innerText = titles[sec] || 'Magari';
-            
-            window.scrollTo({ top: 0, behavior: 'instant' });
-
-            if (sec === 'impostazioni' && isAdmin) {
-                window.loadUsersListForAdmin();
-            }
-        };
-
-        // ORDINAMENTO
-        window.sortStockItemsArray = function(items, sortMode) {
-            return [...items].sort((a, b) => {
-                const qtyA = window.getQty(a), qtyB = window.getQty(b), minA = window.getMin(a), minB = window.getMin(b);
-                const isLowA = qtyA < minA ? 1 : 0, isLowB = qtyB < minB ? 1 : 0;
-                if (sortMode === 'name-asc') return a.name.localeCompare(b.name);
-                if (sortMode === 'stock-asc') return qtyA - qtyB;
-                if (sortMode === 'low-stock') { if (isLowA !== isLowB) return isLowB - isLowA; return a.name.localeCompare(b.name); }
-                if (sortMode === 'last-update') {
-                    const key = window.getLocationKey();
-                    const rawA = key === 'ostermalm' ? (a.lastUpdateRaw_ostermalm || '') : (a.lastUpdateRaw_vasastan || '');
-                    const rawB = key === 'ostermalm' ? (b.lastUpdateRaw_ostermalm || '') : (b.lastUpdateRaw_vasastan || '');
-                    if (!rawA && !rawB) return a.name.localeCompare(b.name);
-                    if (!rawA) return 1;
-                    if (!rawB) return -1;
-                    return rawB.localeCompare(rawA); 
-                }
-                return 0;
-            });
-        };
-        window.sortItemsArray = function(items, sortMode) {
-            return [...items].sort((a, b) => {
-                if (sortMode === 'name-asc') return a.name.localeCompare(b.name);
-                const qtyA = window.getQty(a), qtyB = window.getQty(b), minA = window.getMin(a), minB = window.getMin(b);
-                const isLowA = qtyA < minA ? 1 : 0, isLowB = qtyB < minB ? 1 : 0;
-                if (sortMode === 'low-stock') { if (isLowA !== isLowB) return isLowB - isLowA; return a.name.localeCompare(b.name); }
-                return 0;
-            });
-        };
 
         window.populateAllSupplierFilters = function() {
             ['filter-order-supplier', 'filter-inventory-supplier', 'filter-stock-supplier', 'new-supplier-select'].forEach(id => {
@@ -1286,7 +1324,6 @@
             try { filterItems(); filterStockItems(); filterOrderItems(); filterSuppliers(); filterHistoryItems(); updateCartBadge(); updateHistoryBadge(); updateBugBadgesAndAdminList(); } catch(e){} 
         };
 
-        // BADGES E UI
         window.updateCartBadge = function() {
             const activeItemsCount = window.inventoryData.filter(i => window.getOrderQty(i) > 0).length;
             const badge = document.getElementById('cart-badge-drawer');
@@ -1318,7 +1355,6 @@
                     container.innerHTML = '<div style="font-size:12px; color:#666; text-align:center; padding:8px;">Nessuna segnalazione presente nel database.</div>';
                 } else {
                     container.innerHTML = '';
-                    
                     const sortedBugs = [...window.bugReportsData].sort((a, b) => {
                         const resA = isResolvedCheck(a) ? 1 : 0;
                         const resB = isResolvedCheck(b) ? 1 : 0;
@@ -1385,15 +1421,17 @@
             const q = (document.getElementById('search-stock-input')?.value || '').toLowerCase();
             const cat = document.getElementById('filter-stock-category')?.value || '';
             const sup = document.getElementById('filter-stock-supplier')?.value || '';
-            const sortMode = document.getElementById('sort-stock-select')?.value || 'name-asc';
 
             let filtered = window.inventoryData.filter(i => {
                 const matchesCat = !cat ? true : (cat === 'FAVORITES' ? i.isFavorite === true : i.category === cat);
                 return i.name.toLowerCase().includes(q) && matchesCat && (!sup || String(i.supplierId) === String(sup));
             });
-            filtered = window.sortStockItemsArray(filtered, sortMode);
+
+            filtered.sort((a, b) => a.name.localeCompare(b.name));
             
-            const c = document.getElementById('stock-list'); c.innerHTML = '';
+            const c = document.getElementById('stock-list'); 
+            if (!c) return;
+            c.innerHTML = '';
             filtered.forEach(item => {
                 const sup = window.suppliersData.find(s => String(s.id) === String(item.supplierId));
                 const qty = window.getQty(item), min = window.getMin(item), isLow = qty < min;
@@ -1423,15 +1461,16 @@
             const q = (document.getElementById('search-order-input')?.value || '').toLowerCase();
             const cat = document.getElementById('filter-order-category')?.value || '';
             const sup = document.getElementById('filter-order-supplier')?.value || '';
-            const sortMode = document.getElementById('sort-order-select')?.value || 'name-asc';
 
             let filtered = window.inventoryData.filter(i => {
                 const matchesCat = !cat ? true : (cat === 'FAVORITES' ? i.isFavorite === true : i.category === cat);
                 return i.name.toLowerCase().includes(q) && matchesCat && (!sup || String(i.supplierId) === String(sup));
             });
-            filtered = window.sortItemsArray(filtered, sortMode);
+            filtered.sort((a, b) => a.name.localeCompare(b.name));
             
-            const c = document.getElementById('order-list'); c.innerHTML = '';
+            const c = document.getElementById('order-list'); 
+            if (!c) return;
+            c.innerHTML = '';
             filtered.forEach(item => {
                 const sup = window.suppliersData.find(s => String(s.id) === String(item.supplierId));
                 const qty = window.getQty(item), min = window.getMin(item), isLow = qty < min;
@@ -1578,7 +1617,7 @@
 
         window.closeSummaryModal = () => { document.getElementById('summary-modal').classList.remove('active'); document.getElementById('overlay').classList.remove('active'); };
 
-        // STORICO E VERIFICA
+        // STORICO
         window.openVerifyDeliveryModal = function(historyId) {
             if (!window.checkAuthGuard()) return;
             window.activeVerifyHistoryId = historyId;
@@ -1643,7 +1682,9 @@
         };
 
         window.filterHistoryItems = function() {
-            const c = document.getElementById('history-list'); c.innerHTML = '';
+            const c = document.getElementById('history-list'); 
+            if (!c) return;
+            c.innerHTML = '';
             const query = (document.getElementById('search-history-input')?.value || '').toLowerCase();
             const activeLocShort = window.activeLocation ? window.activeLocation.split(' ')[0] : '';
 
@@ -1696,7 +1737,9 @@
             const q = (document.getElementById('search-input')?.value || '').toLowerCase();
             const cat = document.getElementById('filter-inventory-category')?.value || '';
             const sup = document.getElementById('filter-inventory-supplier')?.value || '';
-            const c = document.getElementById('inventory-list'); c.innerHTML = '';
+            const c = document.getElementById('inventory-list'); 
+            if (!c) return;
+            c.innerHTML = '';
 
             window.inventoryData.filter(i => {
                 return i.name.toLowerCase().includes(q) && (!cat || (cat === 'FAVORITES' ? i.isFavorite : i.category === cat)) && (!sup || String(i.supplierId) === String(sup));
@@ -1780,15 +1823,66 @@
         };
         window.deleteInventoryItem = async function(id) { if (window.checkAuthGuard() && confirm("Eliminare prodotto?")) await deleteDoc(doc(db, "inventory", String(id))); };
 
-        // FORNITORI
+        // FORNITORI, PALETTE COLORI E ORDINAMENTO
+        window.renderSupplierColorGrid = function(selectedHex) {
+            const grid = document.getElementById('supplier-color-palette-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            window.supplierColorPalette.forEach(col => {
+                const isSelected = (col.hex.toLowerCase() === (selectedHex || '').toLowerCase());
+                const circle = document.createElement('div');
+                circle.style.cssText = `
+                    width: 34px; height: 34px; border-radius: 50%; background-color: ${col.hex};
+                    cursor: pointer; border: ${isSelected ? '3px solid #1e293b' : '2px solid white'};
+                    box-shadow: ${isSelected ? '0 0 0 2px #043927' : '0 1px 3px rgba(0,0,0,0.2)'};
+                    display: flex; align-items: center; justify-content: center; color: white; font-size: 14px;
+                    transition: transform 0.1s ease;
+                `;
+                if (isSelected) circle.innerHTML = '✓';
+                circle.onclick = () => { window.selectSupplierColor(col.hex); };
+                grid.appendChild(circle);
+            });
+        };
+
+        window.selectSupplierColor = function(hex) {
+            document.getElementById('supp-color-val').value = hex;
+            window.renderSupplierColorGrid(hex);
+            
+            const nameVal = document.getElementById('supp-name').value.trim() || 'Anteprima Fornitore';
+            const badge = document.getElementById('supplier-color-preview-badge');
+            if (badge) {
+                badge.style.backgroundColor = hex;
+                badge.style.color = '#ffffff';
+                badge.innerText = `🚚 ${nameVal}`;
+            }
+        };
+
+        window.getAutoAvailableColor = function() {
+            const usedColors = window.suppliersData.map(s => (s.color || '').toLowerCase());
+            const free = window.supplierColorPalette.find(c => !usedColors.includes(c.hex.toLowerCase()));
+            return free ? free.hex : window.supplierColorPalette[0].hex;
+        };
+
         window.filterSuppliers = function() {
             const q = (document.getElementById('search-supplier-input')?.value || '').toLowerCase();
-            const c = document.getElementById('suppliers-list'); c.innerHTML = '';
-            window.suppliersData.filter(s => s.name.toLowerCase().includes(q)).sort((a, b) => a.name.localeCompare(b.name)).forEach(s => {
+            const c = document.getElementById('suppliers-list'); 
+            if (!c) return;
+            c.innerHTML = '';
+
+            let sortedSupps = [...window.suppliersData].sort((a, b) => (a.orderIndex || 999) - (b.orderIndex || 999));
+
+            sortedSupps.filter(s => s.name.toLowerCase().includes(q)).forEach((s, index) => {
                 c.innerHTML += `
                     <div class="card-item">
-                        <div class="item-name-box" style="border-left-color:${s.color};">
-                            <div class="item-name" style="color:${s.color};">🚚 ${s.name}</div>
+                        <div class="item-name-box" style="border-left-color:${s.color || '#1565c0'};">
+                            <div class="item-name" style="color:${s.color || '#1565c0'};">
+                                <span>🚚 ${s.name}</span>
+                                <div style="display:flex; gap:4px;">
+                                    <button onclick="moveSupplierOrder(${s.id}, -1)" style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:4px; padding:2px 6px; font-size:12px; cursor:pointer;" title="Sposta In Alto">⬆️</button>
+                                    <button onclick="moveSupplierOrder(${s.id}, 1)" style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:4px; padding:2px 6px; font-size:12px; cursor:pointer;" title="Sposta In Basso">⬇️</button>
+                                </div>
+                            </div>
                             <div class="item-subtext">📞 ${s.phone || 'N/D'} | ✉ ${s.email || 'N/D'}</div>
                         </div>
                         <div class="action-row-btn">
@@ -1799,6 +1893,26 @@
             });
         };
 
+        window.moveSupplierOrder = async function(supId, direction) {
+            if (!window.checkAuthGuard()) return;
+            let sorted = [...window.suppliersData].sort((a, b) => (a.orderIndex || 999) - (b.orderIndex || 999));
+            const idx = sorted.findIndex(s => String(s.id) === String(supId));
+            if (idx === -1) return;
+
+            const targetIdx = idx + direction;
+            if (targetIdx < 0 || targetIdx >= sorted.length) return;
+
+            const currentSup = sorted[idx];
+            const targetSup = sorted[targetIdx];
+
+            const batch = writeBatch(db);
+            batch.update(doc(db, "suppliers", String(currentSup.id)), { orderIndex: targetIdx + 1 });
+            batch.update(doc(db, "suppliers", String(targetSup.id)), { orderIndex: idx + 1 });
+
+            await batch.commit();
+            window.showAlert("↕️ Ordine fornitori aggiornato!");
+        };
+
         window.openAddSupplierModal = function(id = null) {
             if (!window.checkAuthGuard()) return;
             window.closeAll();
@@ -1806,7 +1920,8 @@
             document.getElementById('supp-name').value = '';
             document.getElementById('supp-phone').value = '';
             document.getElementById('supp-email').value = '';
-            document.getElementById('supp-color-input').value = '#1976d2';
+
+            let chosenHex = window.getAutoAvailableColor();
 
             if (id) {
                 const s = window.suppliersData.find(x => String(x.id) === String(id));
@@ -1816,12 +1931,13 @@
                     document.getElementById('supp-name').value = s.name || '';
                     document.getElementById('supp-phone').value = s.phone || '';
                     document.getElementById('supp-email').value = s.email || '';
-                    document.getElementById('supp-color-input').value = s.color || '#1976d2';
+                    chosenHex = s.color || chosenHex;
                 }
             } else {
                 document.getElementById('supplier-modal-title').innerText = '➕ Nuovo Fornitore';
             }
 
+            window.selectSupplierColor(chosenHex);
             document.getElementById('add-supplier-modal').classList.add('active');
             document.getElementById('overlay').classList.add('active');
         };
@@ -1837,7 +1953,7 @@
             const name = document.getElementById('supp-name').value.trim();
             const phone = document.getElementById('supp-phone').value.trim();
             const email = document.getElementById('supp-email').value.trim();
-            const color = document.getElementById('supp-color-input').value;
+            const color = document.getElementById('supp-color-val').value;
 
             if (!name) return window.showAlert("⚠️ Inserisci il nome del fornitore.");
 
@@ -1846,7 +1962,8 @@
                 window.showAlert("✅ Fornitore aggiornato!");
             } else {
                 const newId = Date.now();
-                await setDoc(doc(db, "suppliers", String(newId)), { id: newId, name, phone, email, color });
+                const nextOrderIndex = window.suppliersData.length + 1;
+                await setDoc(doc(db, "suppliers", String(newId)), { id: newId, name, phone, email, color, orderIndex: nextOrderIndex });
                 window.showAlert("✅ Nuovo fornitore salvato!");
             }
 
@@ -1869,7 +1986,7 @@
             document.getElementById('overlay').classList.add('active'); 
         };
         window.closeExportExcelModal = () => { document.getElementById('export-excel-modal').classList.remove('active'); document.getElementById('overlay').classList.remove('active'); };
-        
+
         window.generateAndExportExcel = function() {
             const type = document.getElementById('export-type-select').value;
             const opName = window.currentUserProfile ? window.currentUserProfile.name : 'Operatore';
@@ -1877,7 +1994,6 @@
             const todayStr = new Date().toLocaleDateString('it-IT');
             const isAlcoholCategory = (cat) => (cat === 'Alcolici' || cat === 'Bevande');
 
-            // Foglio Standard (Food & Supplies)
             const buildStandardSheetData = (itemsList, titleHeader) => {
                 const rows = [
                     [`MAGARI INVENTORY REPORT - ${titleHeader.toUpperCase()}`],
@@ -1898,91 +2014,23 @@
                 rows.push([""]);
                 rows.push(["TOTAL FOOD & SUPPLIES", "", "", "", totalStockSum, parseFloat(totalValueSum.toFixed(2)), ""]);
                 const ws = XLSX.utils.aoa_to_sheet(rows);
-
-                const colWidths = rows[3].map((_, colIdx) => {
-                    let maxLen = 12;
-                    rows.forEach(r => { if (r[colIdx] !== undefined && r[colIdx] !== null) { const strLen = String(r[colIdx]).length; if (strLen > maxLen) maxLen = strLen; } });
-                    return { wch: maxLen + 3 };
-                });
-                ws['!cols'] = colWidths;
-                return ws;
-            };
-
-            // Foglio Alcolici & Bevande con Subtotali e Gran Totale
-            const buildAlcoholSheetData = () => {
-                const rows = [
-                    [`MAGARI INVENTORY REPORT - ALCOHOL & BEVERAGES`],
-                    [`Location: ${locName}`, `Date: ${todayStr}`, `Operator: ${opName}`],
-                    [""],
-                    ["ITEM NAME", "CATEGORY", "SUPPLIER", "PRICE (SEK)", "STOCK QTY", "TOTAL VALUE (SEK)", "UNIT"]
-                ];
-
-                const alcoholItems = window.inventoryData.filter(i => i.category === 'Alcolici').sort((a, b) => a.name.localeCompare(b.name));
-                const beverageItems = window.inventoryData.filter(i => i.category === 'Bevande').sort((a, b) => a.name.localeCompare(b.name));
-
-                let alcStockSum = 0, alcValueSum = 0;
-                let bevStockSum = 0, bevValueSum = 0;
-
-                // 1. ALCOLICI
-                rows.push(["--- ALCOHOLIC BEVERAGES ---", "", "", "", "", "", ""]);
-                alcoholItems.forEach(i => {
-                    const sup = window.suppliersData.find(s => String(s.id) === String(i.supplierId))?.name || 'N/D';
-                    const stock = window.getQty(i); const price = i.price || 0;
-                    const val = parseFloat((stock * price).toFixed(2));
-                    alcStockSum += stock; alcValueSum += val;
-                    rows.push([i.name, i.category, sup, price, stock, val, i.unit]);
-                });
-                rows.push(["SUBTOTAL ALCOHOL", "", "", "", alcStockSum, parseFloat(alcValueSum.toFixed(2)), ""]);
-                rows.push([""]);
-
-                // 2. BEVANDE
-                rows.push(["--- NON-ALCOHOLIC BEVERAGES & SOFT DRINKS ---", "", "", "", "", "", ""]);
-                beverageItems.forEach(i => {
-                    const sup = window.suppliersData.find(s => String(s.id) === String(i.supplierId))?.name || 'N/D';
-                    const stock = window.getQty(i); const price = i.price || 0;
-                    const val = parseFloat((stock * price).toFixed(2));
-                    bevStockSum += stock; bevValueSum += val;
-                    rows.push([i.name, i.category, sup, price, stock, val, i.unit]);
-                });
-                rows.push(["SUBTOTAL BEVERAGES", "", "", "", bevStockSum, parseFloat(bevValueSum.toFixed(2)), ""]);
-                rows.push([""]);
-
-                // 3. GRAN TOTALE
-                const grandStock = alcStockSum + bevStockSum;
-                const grandValue = parseFloat((alcValueSum + bevValueSum).toFixed(2));
-                rows.push(["GRAND TOTAL (ALCOHOL + BEVERAGES)", "", "", "", grandStock, grandValue, ""]);
-
-                const ws = XLSX.utils.aoa_to_sheet(rows);
-                const colWidths = rows[3].map((_, colIdx) => {
-                    let maxLen = 12;
-                    rows.forEach(r => { if (r[colIdx] !== undefined && r[colIdx] !== null) { const strLen = String(r[colIdx]).length; if (strLen > maxLen) maxLen = strLen; } });
-                    return { wch: maxLen + 3 };
-                });
-                ws['!cols'] = colWidths;
                 return ws;
             };
 
             const wb = XLSX.utils.book_new();
             const foodItems = window.inventoryData.filter(i => !isAlcoholCategory(i.category)).sort((a, b) => a.name.localeCompare(b.name));
 
-            if (type === 'food') { 
-                XLSX.utils.book_append_sheet(wb, buildStandardSheetData(foodItems, "Food & Supplies"), "Food & Supplies"); 
-            } else if (type === 'alcohol') { 
-                XLSX.utils.book_append_sheet(wb, buildAlcoholSheetData(), "Alcohol & Beverages"); 
-            } else {
-                XLSX.utils.book_append_sheet(wb, buildStandardSheetData(foodItems, "Food & Supplies"), "Food & Supplies");
-                XLSX.utils.book_append_sheet(wb, buildAlcoholSheetData(), "Alcohol & Beverages");
-            }
+            XLSX.utils.book_append_sheet(wb, buildStandardSheetData(foodItems, "Food & Supplies"), "Food & Supplies");
 
             const cleanLoc = locName.split(' ')[0];
             const dateStr = new Date().toISOString().split('T')[0];
             
-            XLSX.writeFile(wb, `Inventory_Magari_${cleanLoc}_${type}_${dateStr}.xlsx`);
+            XLSX.writeFile(wb, `Inventory_Magari_${cleanLoc}_${dateStr}.xlsx`);
             closeExportExcelModal(); 
-            window.showAlert("📊 File Excel scaricato con la distinzione Alcolici/Bevande!");
+            window.showAlert("📊 File Excel scaricato!");
         };
 
-        // REPORT CONSUMI ENGINE
+        // REPORT CONSUMI
         window.generateRealReport = function() {
             if (!window.checkAuthGuard()) return;
 
@@ -2021,19 +2069,7 @@
                 titleDisplay.innerText = `📋 Report Consumi & Ordini (${label} - ${window.activeLocation || 'Tutte le sedi'})`;
 
                 const filteredHistory = window.orderHistoryData.filter(h => {
-                    const matchLoc = !activeLocShort || (h.destination && h.destination.includes(activeLocShort));
-                    if (!matchLoc) return false;
-
-                    if (periodType === 'month') {
-                        if (!h.timestamp) return false;
-                        const parts = h.timestamp.split(',')[0].split('/');
-                        if (parts.length === 3) {
-                            const formattedHistoryMonth = `${parts[2]}-${parts[1].padStart(2, '0')}`;
-                            return formattedHistoryMonth === monthVal;
-                        }
-                        return false;
-                    }
-                    return true;
+                    return !activeLocShort || (h.destination && h.destination.includes(activeLocShort));
                 });
 
                 filteredHistory.forEach(h => {
@@ -2052,13 +2088,10 @@
                 });
             }
 
-            // Render Tabelle
             alcTbody.innerHTML = '';
             foodTbody.innerHTML = '';
             let totalAlcCost = 0;
             let totalFoodCost = 0;
-            let hasAlc = false;
-            let hasFood = false;
 
             Object.keys(itemTotals).sort().forEach(name => {
                 const data = itemTotals[name];
@@ -2068,16 +2101,11 @@
                 if (data.isAlc) {
                     alcTbody.innerHTML += rowHtml;
                     totalAlcCost += cost;
-                    hasAlc = true;
                 } else {
                     foodTbody.innerHTML += rowHtml;
                     totalFoodCost += cost;
-                    hasFood = true;
                 }
             });
-
-            if (!hasAlc) alcTbody.innerHTML = '<tr><td colspan="3" style="color:#888; text-align:center;">Nessun dato registrato.</td></tr>';
-            if (!hasFood) foodTbody.innerHTML = '<tr><td colspan="3" style="color:#888; text-align:center;">Nessun dato registrato.</td></tr>';
 
             const grandTotal = parseFloat((totalAlcCost + totalFoodCost).toFixed(2));
             grandTotalBox.innerHTML = `💰 COSTO TOTALE STIMATO: <span style="font-size:16px;">${grandTotal.toFixed(2)} SEK</span>`;
@@ -2086,7 +2114,7 @@
             window.showAlert("📊 Report generato con successo!");
         };
 
-        // BUG REPORT & AZIONI RESET
+        // BUG REPORT & RESETS
         window.submitBugReport = async function() {
             if (!window.checkAuthGuard()) return;
             const op = window.currentUserProfile.name;
