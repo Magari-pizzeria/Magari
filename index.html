@@ -5,16 +5,14 @@
 ====================================================================
 [MAGARI APP - HISTORICAL CHANGELOG REGISTRY & ARCHIVE]
 
-- v4.2.0 STABLE (12/10/2026 - FIX REPORT MONTH PICKER, EXCEL ALCOHOL/BEVERAGES & ADMIN FAVORITES):
+- v4.2.0 STABLE (12/10/2026 - FIX REPORT MONTH PICKER, EXCEL ALCOHOL/BEVERAGES, ADMIN FAVORITES & ADVANCED SORTING):
   1. Risolto il bug di selezione del mese nel Report Consumi con pre-compilazione automatica del mese corrente (YYYY-MM).
   2. Ripristinato l'export Excel completo per Alcolici & Bevande con subtotali separati e gran totale.
   3. Applicato l'auto-sizing delle colonne (!cols) in Excel per evitare il troncamento dei testi.
   4. Riservata la modifica dei Preferiti agli utenti Admin dal Magazzino, con badge fisso di sola lettura ("⭐ Preferito" / "☆ Preferito") per gli operatori in Ordini e Scorte.
-  5. Sincronizzato con il database di Produzione Ufficiale (magari-b7f93).
-
-- v4.1.2 STABLE (08/10/2026 - FIX CACHE BUSTING, AUTH PERSISTENCE & REALTIME NOTIFICATIONS):
-  6. Deregistrazione automatica Service Worker per invalidare la vecchia cache PWA.
-  7. Sincronizzazione chiave API attiva (magari-b7f93).
+  5. Corretto l'ordinamento "Scorte Basse": evidenzia in alto tutti i prodotti sotto la soglia minima ordinati alfabeticamente.
+  6. Corretto l'ordinamento "Ultima Modifica": ordina temporalmente dal più recente al meno recente basandosi sui timestamp reali della sede attiva.
+  7. Sincronizzato con il database di Produzione Ufficiale (magari-b7f93).
 ====================================================================
 -->
     <meta charset="UTF-8">
@@ -33,16 +31,175 @@
     <meta name="apple-mobile-web-app-title" content="Magari Pizzeria">
     
     <!-- Icone Schermata Home & Favicon -->
-    <link rel="manifest" href="manifest.json?v=4.2.0">
-    <link rel="apple-touch-icon" href="logo-square.png?v=4.2.0">
-    <link rel="icon" type="image/png" href="logo-square.png?v=4.2.0">
+    <link rel="manifest" href="manifest.json?v=4.2.1">
+    <link rel="apple-touch-icon" href="logo-square.png?v=4.2.1">
+    <link rel="icon" type="image/png" href="logo-square.png?v=4.2.1">
 
-    <title>Magari v4.2.0 STABLE</title>
+    <title>Magari v4.2.1 STABLE</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #043927; --bg: #e6e3dc; --card-bg: #f5f3ed; --text: #1c1c1a;
+            --text-secondary: #5a5854; --border: #d4d0c7; --warning: #ff9800; --danger: #e53935; --whatsapp: #25d366;
+            --excel-green: #107c41; --star-gold: #ffb300;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        html, body { width: 100%; overflow-x: hidden; background-color: var(--bg); color: var(--text); }
+        body { display: flex; justify-content: center; min-height: 100vh; }
+
+        .app-container { width: 100%; max-width: 430px; min-height: 100vh; background-color: var(--bg); position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.1); display: flex; flex-direction: column; transition: max-width 0.3s ease; overflow-x: hidden; }
+        
+        .header { background-color: var(--primary); color: white; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
+        .menu-btn { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
+        .header-brand-text { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .brand-title { font-family: 'Cinzel', 'Times New Roman', serif; font-size: 20px; font-weight: 700; color: #ffffff; letter-spacing: 2px; line-height: 1; text-transform: uppercase; }
+        .brand-subtitle { font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 8px; font-weight: 700; color: #ffffff; letter-spacing: 1px; margin-top: 3px; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; }
+        .page-badge { font-size: 11px; background: rgba(0, 0, 0, 0.25); color: #fff; padding: 4px 8px; border-radius: 6px; font-weight: 600; }
+
+        .top-bar-container { padding: 12px 16px; background-color: rgba(255, 255, 255, 0.92); backdrop-filter: blur(5px); border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; width: 100%; }
+        .top-bar-container div { min-width: 0; }
+
+        .search-row { display: flex; gap: 8px; width: 100%; }
+        .search-input { flex: 1; min-width: 0; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; width: 100%; }
+        .filter-select, .location-select, .date-picker, .operator-input { flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid var(--primary); border-radius: 8px; font-size: 13px; font-weight: 600; background-color: #f0f7f4; color: var(--primary); outline: none; width: 100%; text-overflow: ellipsis; }
+        
+        .add-btn { background-color: var(--primary); color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+        .btn-excel { background-color: var(--excel-green); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; box-shadow: 0 2px 6px rgba(16, 124, 65, 0.3); }
+        .reset-btn { background-color: #fff3f0; color: var(--danger); border: 1px solid var(--danger); padding: 8px 12px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; width: 100%; }
+
+        .star-toggle-btn { 
+            background: #fefbf3; 
+            border: 1px solid #f3e8d2; 
+            color: #b45309; 
+            font-size: 11px; 
+            font-weight: 800; 
+            cursor: pointer; 
+            padding: 4px 8px; 
+            border-radius: 6px; 
+            transition: all 0.15s ease; 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 4px; 
+            white-space: nowrap; 
+            flex-shrink: 0; 
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03); 
+        }
+        .star-toggle-btn.active { 
+            background: #fef3c7; 
+            border-color: #f59e0b; 
+            color: #92400e; 
+        }
+
+        .location-active-banner { background: #e8f5e9; border-bottom: 1px solid #c8e6c9; padding: 8px 16px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: bold; color: #2e7d32; }
+
+        .view-section { display: none; flex-direction: column; flex: 1; padding-bottom: 20px; position: relative; width: 100%; }
+        .view-section.active { display: flex; }
+        #view-ordini { padding-bottom: 140px; }
+
+        .page-lock-banner { position: absolute; top: 0; left: 0; width: 100%; height: 100%; min-height: 100vh; background-color: rgba(244, 246, 248, 0.98); backdrop-filter: blur(8px); z-index: 500; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 80px 20px 20px 20px; text-align: center; }
+        .page-lock-box { background: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); width: 100%; max-width: 320px; border: 1px solid var(--border); }
+
+        .content-list { padding: 12px 16px; display: flex; flex-direction: column; gap: 12px; flex: 1; width: 100%; }
+        .card-item { background-color: var(--card-bg); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid var(--border); overflow: hidden; width: 100%; }
+        
+        @keyframes pulseBorder {
+            0% { border-color: var(--danger); box-shadow: 0 0 0 0 rgba(229, 57, 53, 0.4); }
+            50% { border-color: #ff8a80; box-shadow: 0 0 8px 2px rgba(229, 57, 53, 0.6); }
+            100% { border-color: var(--danger); box-shadow: 0 0 0 0 rgba(229, 57, 53, 0.4); }
+        }
+        .card-item.low-stock-alert { border: 2px solid var(--danger); background-color: #fff8f8; animation: pulseBorder 1.5s infinite; }
+
+        .item-name-box { padding: 10px 12px; border-radius: 6px; display: flex; flex-direction: column; gap: 4px; border-left-width: 4px; border-left-style: solid; background: #ffffff; }
+        .item-name { font-size: 17px; font-weight: 800; color: #111111; line-height: 1.25; display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 8px; }
+        .item-subtext { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+
+        .stock-warning-badge { display: inline-flex; align-items: center; font-size: 12px; font-weight: 800; padding: 4px 8px; border-radius: 6px; margin-top: 6px; line-height: 1.3; }
+        .stock-warning-badge.alert { background-color: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
+        .stock-warning-badge.normal { background-color: #f1f8e9; color: #33691e; border: 1px solid #c5e1a5; }
+
+        .badges-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 6px; }
+        .category-label-tag { font-size: 11px; font-weight: 700; color: #444; text-transform: uppercase; background: #e8f5e9; padding: 3px 8px; border-radius: 4px; border: 1px solid #c8e6c9; }
+        .supplier-badge { font-size: 12px; padding: 3px 8px; border-radius: 6px; display: inline-block; font-weight: 800; color: white; box-shadow: 0 1px 2px rgba(0,0,0,0.15); }
+
+        .item-controls { display: flex; align-items: center; justify-content: flex-end; gap: 6px; flex-wrap: nowrap; margin-top: 4px; border-top: 1px dashed #f0f0f0; padding-top: 8px; }
+        .qty-btn { width: 36px; height: 36px; min-width: 36px; border-radius: 50%; border: 1px solid var(--border); background-color: #f0f0f0; font-weight: bold; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .qty-input { width: 58px; min-width: 58px; text-align: center; padding: 6px 2px; border: 1px solid var(--border); border-radius: 6px; font-size: 15px; font-weight: 700; }
+        .unit-label { font-size: 13px; color: var(--text-secondary); font-weight: 700; min-width: 38px; }
+
+        .stock-label-box { display: flex; flex-direction: column; margin-right: auto; line-height: 1.25; min-width: 0; }
+        .stock-label-main { font-size: 13px; font-weight: 600; color: var(--text-secondary); display: flex; align-items: center; }
+        .stock-label-sub { font-size: 11px; font-weight: bold; margin-top: 2px; }
+
+        .action-row-btn { display: flex; gap: 8px; margin-top: 6px; border-top: 1px solid #f0f0f0; padding-top: 8px; }
+        .btn-action-edit { background: #e3f2fd; color: #0d47a1; border: 1px solid #bbdefb; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; }
+        .btn-action-del { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; }
+
+        .faq-item-box { background: white; border-radius: 8px; border: 1px solid var(--border); padding: 12px; margin-bottom: 10px; }
+        .faq-question { font-size: 14px; font-weight: 800; color: var(--primary); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+        .faq-answer { font-size: 13px; color: #334155; line-height: 1.4; }
+
+        .drawer { position: absolute; top: 0; left: -280px; width: 280px; height: 100%; min-height: 100vh; background-color: #faf8f5; box-shadow: 4px 0 15px rgba(0,0,0,0.15); transition: left 0.3s ease; z-index: 2000; padding: 20px; overflow-y: auto; border-right: 1px solid #e6e2d8; }
+        .drawer.open { left: 0; }
+        .drawer-header { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 16px; border-bottom: 1px solid #1b4332; background-color: var(--primary); border-radius: 10px; padding: 16px 12px; }
+        .drawer-menu { list-style: none; }
+        .drawer-menu li { padding: 12px 10px; font-size: 14px; font-weight: 600; color: #2d3748; border-bottom: 1px solid #eae6df; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-radius: 6px; transition: background 0.15s ease; }
+        .drawer-menu li:active { background-color: #e8f3ee; color: #043927; }
+
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; min-height: 100vh; background: rgba(0,0,0,0.6); display: none; z-index: 1000; backdrop-filter: blur(4px); }
+        .overlay.active { display: block; }
+
+        .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fdfcf7; padding: 22px; border-radius: 14px; width: 92%; max-width: 480px; max-height: 88vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: none; z-index: 9999; border: 1px solid #e2ded4; }
+        .modal.active { display: block !important; }
+        
+        .modal-title { font-size: 17px; font-weight: 800; margin-bottom: 14px; padding: 8px 12px; background: #e8f0ec; color: #043927; border-radius: 8px; border-left: 4px solid #2d6a4f; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; background-color: white; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+        .btn-cancel { background: #e5e2d9; color: #4a5568; border: none; padding: 10px 14px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; }
+        .btn-save { background: #2d6a4f; color: white; border: none; padding: 10px 14px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; }
+        .btn-danger { background: var(--danger); color: white; border: none; padding: 10px 14px; border-radius: 6px; cursor: pointer; font-size: 14px; }
+
+        .toast-notification { 
+            position: fixed; 
+            top: 40%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            background-color: rgba(38, 50, 56, 0.95); 
+            color: white; 
+            padding: 18px 24px; 
+            border-radius: 12px; 
+            font-size: 16px; 
+            font-weight: 700; 
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4); 
+            z-index: 99999; 
+            display: none; 
+            text-align: center; 
+            max-width: 85%; 
+            border-left: 6px solid var(--warning); 
+        }
+        .toast-notification.show { display: block; }
+
+        .sticky-checkout-container { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; padding: 10px 16px 14px 16px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px); border-top: 1px solid var(--border); z-index: 100; }
+        .btn-checkout { width: 100%; background-color: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; }
+
+        .settings-card { background: white; border-radius: 10px; padding: 16px; margin: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 10px; }
+        .history-card { background: white; border-radius: 8px; border: 1px solid var(--border); padding: 12px; margin-bottom: 10px; position: relative; }
+        .history-header { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
+
+        .report-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 12px; }
+        .report-table th, .report-table td { border: 1px solid #e0e0e0; padding: 6px 8px; text-align: left; }
+        .report-table th { background-color: #fafafa; font-weight: bold; color: #444; }
+        .report-table tfoot td { font-weight: bold; background-color: #f1f5f9; color: var(--primary); }
+
+        .badge-notification { background: var(--danger); color: white; border-radius: 12px; font-size: 11px; font-weight: 800; padding: 2px 8px; display: inline-block; }
+    </style>
 </head>
 <body>
 
@@ -70,7 +227,7 @@
             <div class="drawer-header" style="text-align: center;">
                 <img src="logo-header.png" alt="Magari Logo" style="max-width: 170px; height: auto; margin-bottom: 4px;" onerror="this.style.display='none'; document.getElementById('drawer-text-fallback').style.display='block';">
                 <div id="drawer-text-fallback" class="brand-title" style="display:none; font-size: 24px;">MAGARI</div>
-                <div class="brand-subtitle" style="font-size: 9px; background:#2e7d32;">v4.2.0 STABLE</div>
+                <div class="brand-subtitle" style="font-size: 9px; background:#2e7d32;">v4.2.1 STABLE</div>
             </div>
 
             <!-- USER ACCOUNT BANNER NELLO MENU -->
@@ -357,7 +514,7 @@
                 </div>
 
                 <div class="faq-item-box">
-                    <div class="faq-question">📢 9. Come funziona la Bacheca Avvisi Staff?</div>
+                    <div class="faq-question">📢 9. Come funciona la Bacheca Avvisi Staff?</div>
                     <div class="faq-answer">
                         Gli avvisi importanti pubblicati dall'Amministratore appaiono in cima alla schermata principale dentro una card evidenziata. Gli avvisi sono <b>specifici per la sede attiva</b> (Vasastan o Östermalm).
                     </div>
@@ -560,165 +717,6 @@
         <div class="form-group"><label>Email</label><input type="email" id="supp-email" class="form-control"></div>
         <div class="modal-actions"><button class="btn-cancel" onclick="closeAddSupplierModal()">Annulla</button><button class="btn-save" onclick="saveSupplier()">Salva</button></div>
     </div>
-
-    <style>
-        :root {
-            --primary: #043927; --bg: #e6e3dc; --card-bg: #f5f3ed; --text: #1c1c1a;
-            --text-secondary: #5a5854; --border: #d4d0c7; --warning: #ff9800; --danger: #e53935; --whatsapp: #25d366;
-            --excel-green: #107c41; --star-gold: #ffb300;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        html, body { width: 100%; overflow-x: hidden; background-color: var(--bg); color: var(--text); }
-        body { display: flex; justify-content: center; min-height: 100vh; }
-
-        .app-container { width: 100%; max-width: 430px; min-height: 100vh; background-color: var(--bg); position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.1); display: flex; flex-direction: column; transition: max-width 0.3s ease; overflow-x: hidden; }
-        
-        .header { background-color: var(--primary); color: white; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
-        .menu-btn { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
-        .header-brand-text { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        .brand-title { font-family: 'Cinzel', 'Times New Roman', serif; font-size: 20px; font-weight: 700; color: #ffffff; letter-spacing: 2px; line-height: 1; text-transform: uppercase; }
-        .brand-subtitle { font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 8px; font-weight: 700; color: #ffffff; letter-spacing: 1px; margin-top: 3px; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; }
-        .page-badge { font-size: 11px; background: rgba(0, 0, 0, 0.25); color: #fff; padding: 4px 8px; border-radius: 6px; font-weight: 600; }
-
-        .top-bar-container { padding: 12px 16px; background-color: rgba(255, 255, 255, 0.92); backdrop-filter: blur(5px); border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; width: 100%; }
-        .top-bar-container div { min-width: 0; }
-
-        .search-row { display: flex; gap: 8px; width: 100%; }
-        .search-input { flex: 1; min-width: 0; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; width: 100%; }
-        .filter-select, .location-select, .date-picker, .operator-input { flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid var(--primary); border-radius: 8px; font-size: 13px; font-weight: 600; background-color: #f0f7f4; color: var(--primary); outline: none; width: 100%; text-overflow: ellipsis; }
-        
-        .add-btn { background-color: var(--primary); color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
-        .btn-excel { background-color: var(--excel-green); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; box-shadow: 0 2px 6px rgba(16, 124, 65, 0.3); }
-        .reset-btn { background-color: #fff3f0; color: var(--danger); border: 1px solid var(--danger); padding: 8px 12px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; width: 100%; }
-
-        .star-toggle-btn { 
-            background: #fefbf3; 
-            border: 1px solid #f3e8d2; 
-            color: #b45309; 
-            font-size: 11px; 
-            font-weight: 800; 
-            cursor: pointer; 
-            padding: 4px 8px; 
-            border-radius: 6px; 
-            transition: all 0.15s ease; 
-            display: inline-flex; 
-            align-items: center; 
-            gap: 4px; 
-            white-space: nowrap; 
-            flex-shrink: 0; 
-            box-shadow: 0 1px 2px rgba(0,0,0,0.03); 
-        }
-        .star-toggle-btn.active { 
-            background: #fef3c7; 
-            border-color: #f59e0b; 
-            color: #92400e; 
-        }
-
-        .location-active-banner { background: #e8f5e9; border-bottom: 1px solid #c8e6c9; padding: 8px 16px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: bold; color: #2e7d32; }
-
-        .view-section { display: none; flex-direction: column; flex: 1; padding-bottom: 20px; position: relative; width: 100%; }
-        .view-section.active { display: flex; }
-        #view-ordini { padding-bottom: 140px; }
-
-        .page-lock-banner { position: absolute; top: 0; left: 0; width: 100%; height: 100%; min-height: 100vh; background-color: rgba(244, 246, 248, 0.98); backdrop-filter: blur(8px); z-index: 500; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 80px 20px 20px 20px; text-align: center; }
-        .page-lock-box { background: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); width: 100%; max-width: 320px; border: 1px solid var(--border); }
-
-        .content-list { padding: 12px 16px; display: flex; flex-direction: column; gap: 12px; flex: 1; width: 100%; }
-        .card-item { background-color: var(--card-bg); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid var(--border); overflow: hidden; width: 100%; }
-        
-        @keyframes pulseBorder {
-            0% { border-color: var(--danger); box-shadow: 0 0 0 0 rgba(229, 57, 53, 0.4); }
-            50% { border-color: #ff8a80; box-shadow: 0 0 8px 2px rgba(229, 57, 53, 0.6); }
-            100% { border-color: var(--danger); box-shadow: 0 0 0 0 rgba(229, 57, 53, 0.4); }
-        }
-        .card-item.low-stock-alert { border: 2px solid var(--danger); background-color: #fff8f8; animation: pulseBorder 1.5s infinite; }
-
-        .item-name-box { padding: 10px 12px; border-radius: 6px; display: flex; flex-direction: column; gap: 4px; border-left-width: 4px; border-left-style: solid; background: #ffffff; }
-        .item-name { font-size: 17px; font-weight: 800; color: #111111; line-height: 1.25; display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 8px; }
-        .item-subtext { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
-
-        .stock-warning-badge { display: inline-flex; align-items: center; font-size: 12px; font-weight: 800; padding: 4px 8px; border-radius: 6px; margin-top: 6px; line-height: 1.3; }
-        .stock-warning-badge.alert { background-color: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
-        .stock-warning-badge.normal { background-color: #f1f8e9; color: #33691e; border: 1px solid #c5e1a5; }
-
-        .badges-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 6px; }
-        .category-label-tag { font-size: 11px; font-weight: 700; color: #444; text-transform: uppercase; background: #e8f5e9; padding: 3px 8px; border-radius: 4px; border: 1px solid #c8e6c9; }
-        .supplier-badge { font-size: 12px; padding: 3px 8px; border-radius: 6px; display: inline-block; font-weight: 800; color: white; box-shadow: 0 1px 2px rgba(0,0,0,0.15); }
-
-        .item-controls { display: flex; align-items: center; justify-content: flex-end; gap: 6px; flex-wrap: nowrap; margin-top: 4px; border-top: 1px dashed #f0f0f0; padding-top: 8px; }
-        .qty-btn { width: 36px; height: 36px; min-width: 36px; border-radius: 50%; border: 1px solid var(--border); background-color: #f0f0f0; font-weight: bold; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .qty-input { width: 58px; min-width: 58px; text-align: center; padding: 6px 2px; border: 1px solid var(--border); border-radius: 6px; font-size: 15px; font-weight: 700; }
-        .unit-label { font-size: 13px; color: var(--text-secondary); font-weight: 700; min-width: 38px; }
-
-        .stock-label-box { display: flex; flex-direction: column; margin-right: auto; line-height: 1.25; min-width: 0; }
-        .stock-label-main { font-size: 13px; font-weight: 600; color: var(--text-secondary); display: flex; align-items: center; }
-        .stock-label-sub { font-size: 11px; font-weight: bold; margin-top: 2px; }
-
-        .action-row-btn { display: flex; gap: 8px; margin-top: 6px; border-top: 1px solid #f0f0f0; padding-top: 8px; }
-        .btn-action-edit { background: #e3f2fd; color: #0d47a1; border: 1px solid #bbdefb; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; }
-        .btn-action-del { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; }
-
-        .faq-item-box { background: white; border-radius: 8px; border: 1px solid var(--border); padding: 12px; margin-bottom: 10px; }
-        .faq-question { font-size: 14px; font-weight: 800; color: var(--primary); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
-        .faq-answer { font-size: 13px; color: #334155; line-height: 1.4; }
-
-        .drawer { position: absolute; top: 0; left: -280px; width: 280px; height: 100%; min-height: 100vh; background-color: #faf8f5; box-shadow: 4px 0 15px rgba(0,0,0,0.15); transition: left 0.3s ease; z-index: 2000; padding: 20px; overflow-y: auto; border-right: 1px solid #e6e2d8; }
-        .drawer.open { left: 0; }
-        .drawer-header { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 16px; border-bottom: 1px solid #1b4332; background-color: var(--primary); border-radius: 10px; padding: 16px 12px; }
-        .drawer-menu { list-style: none; }
-        .drawer-menu li { padding: 12px 10px; font-size: 14px; font-weight: 600; color: #2d3748; border-bottom: 1px solid #eae6df; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-radius: 6px; transition: background 0.15s ease; }
-        .drawer-menu li:active { background-color: #e8f3ee; color: #043927; }
-
-        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; min-height: 100vh; background: rgba(0,0,0,0.6); display: none; z-index: 1000; backdrop-filter: blur(4px); }
-        .overlay.active { display: block; }
-
-        .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fdfcf7; padding: 22px; border-radius: 14px; width: 92%; max-width: 480px; max-height: 88vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: none; z-index: 9999; border: 1px solid #e2ded4; }
-        .modal.active { display: block !important; }
-        
-        .modal-title { font-size: 17px; font-weight: 800; margin-bottom: 14px; padding: 8px 12px; background: #e8f0ec; color: #043927; border-radius: 8px; border-left: 4px solid #2d6a4f; }
-        .form-group { margin-bottom: 12px; }
-        .form-group label { display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
-        .form-control { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; background-color: white; }
-        .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
-        .btn-cancel { background: #e5e2d9; color: #4a5568; border: none; padding: 10px 14px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; }
-        .btn-save { background: #2d6a4f; color: white; border: none; padding: 10px 14px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; }
-        .btn-danger { background: var(--danger); color: white; border: none; padding: 10px 14px; border-radius: 6px; cursor: pointer; font-size: 14px; }
-
-        .toast-notification { 
-            position: fixed; 
-            top: 40%; 
-            left: 50%; 
-            transform: translate(-50%, -50%); 
-            background-color: rgba(38, 50, 56, 0.95); 
-            color: white; 
-            padding: 18px 24px; 
-            border-radius: 12px; 
-            font-size: 16px; 
-            font-weight: 700; 
-            box-shadow: 0 8px 24px rgba(0,0,0,0.4); 
-            z-index: 99999; 
-            display: none; 
-            text-align: center; 
-            max-width: 85%; 
-            border-left: 6px solid var(--warning); 
-        }
-        .toast-notification.show { display: block; }
-
-        .sticky-checkout-container { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; padding: 10px 16px 14px 16px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px); border-top: 1px solid var(--border); z-index: 100; }
-        .btn-checkout { width: 100%; background-color: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; }
-
-        .settings-card { background: white; border-radius: 10px; padding: 16px; margin: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 10px; }
-        .history-card { background: white; border-radius: 8px; border: 1px solid var(--border); padding: 12px; margin-bottom: 10px; position: relative; }
-        .history-header { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
-
-        .report-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 12px; }
-        .report-table th, .report-table td { border: 1px solid #e0e0e0; padding: 6px 8px; text-align: left; }
-        .report-table th { background-color: #fafafa; font-weight: bold; color: #444; }
-        .report-table tfoot td { font-weight: bold; background-color: #f1f5f9; color: var(--primary); }
-
-        .badge-notification { background: var(--danger); color: white; border-radius: 12px; font-size: 11px; font-weight: 800; padding: 2px 8px; display: inline-block; }
-    </style>
     <script type="module">
         // 1. DEREGISTRAZIONE DIRETTA DEI SERVICE WORKER PER INVALIDARE VECCHIE COPIE IN CACHE
         if ('serviceWorker' in navigator) {
@@ -1268,13 +1266,14 @@
             window.refreshAllViews();
         });
 
-        // HELPERS GENERALI
+        // HELPERS GENERALI & METADATI
         window.getLocationKey = () => (window.activeLocation && window.activeLocation.includes('Östermalm')) ? 'ostermalm' : 'vasastan';
         window.getQty = (i) => window.getLocationKey() === 'ostermalm' ? (i.qty_ostermalm ?? 0) : (i.qty_vasastan ?? i.qty ?? 0);
         window.getOrderQty = (i) => window.getLocationKey() === 'ostermalm' ? (i.orderQty_ostermalm ?? 0) : (i.orderQty_vasastan ?? i.orderQty ?? 0);
         window.getMin = (i) => window.getLocationKey() === 'ostermalm' ? (i.minQty_ostermalm ?? 2) : (i.minQty_vasastan ?? i.minQty ?? 2);
         window.getLastUpdateBy = (i) => window.getLocationKey() === 'ostermalm' ? (i.lastUpdateBy_ostermalm ?? '') : (i.lastUpdateBy_vasastan ?? '');
         window.getLastUpdateDate = (i) => window.getLocationKey() === 'ostermalm' ? (i.lastUpdateDate_ostermalm ?? '') : (i.lastUpdateDate_vasastan ?? '');
+        window.getLastUpdateRaw = (i) => window.getLocationKey() === 'ostermalm' ? (i.lastUpdateRaw_ostermalm ?? '') : (i.lastUpdateRaw_vasastan ?? '');
 
         window.getStockUpdatesObj = function(newQty, opName) {
             const key = window.getLocationKey();
@@ -1310,7 +1309,6 @@
                 monthGroup.style.display = (type === 'month') ? 'block' : 'none';
             }
 
-            // Inizializzazione automatica al mese corrente se vuoto
             if (type === 'month' && monthPicker && !monthPicker.value) {
                 const now = new Date();
                 const yr = now.getFullYear();
@@ -1439,7 +1437,7 @@
             }
         };
 
-        // SCORTE
+        // SCORTE - AGGIORNAMENTO, FILTRI E ORDINAMENTO AVANZATO
         window.updateStock = async function(id, d) { 
             if (!window.checkAuthGuard()) return;
             const opName = window.currentUserProfile.name;
@@ -1464,12 +1462,33 @@
             const q = (document.getElementById('search-stock-input')?.value || '').toLowerCase();
             const cat = document.getElementById('filter-stock-category')?.value || '';
             const sup = document.getElementById('filter-stock-supplier')?.value || '';
+            const sortVal = document.getElementById('sort-stock-select')?.value || 'name-asc';
 
             let filtered = window.inventoryData.filter(i => {
                 const matchesCat = !cat ? true : (cat === 'FAVORITES' ? i.isFavorite === true : i.category === cat);
                 return i.name.toLowerCase().includes(q) && matchesCat && (!sup || String(i.supplierId) === String(sup));
             });
-            filtered.sort((a, b) => a.name.localeCompare(b.name));
+
+            // LOGICA ORDINAMENTO AVANZATO SCORTE
+            filtered.sort((a, b) => {
+                if (sortVal === 'low-stock') {
+                    const isLowA = window.getQty(a) < window.getMin(a);
+                    const isLowB = window.getQty(b) < window.getMin(b);
+                    if (isLowA && !isLowB) return -1;
+                    if (!isLowA && isLowB) return 1;
+                    return a.name.localeCompare(b.name);
+                } else if (sortVal === 'stock-asc') {
+                    const diff = window.getQty(a) - window.getQty(b);
+                    if (diff !== 0) return diff;
+                    return a.name.localeCompare(b.name);
+                } else if (sortVal === 'last-update') {
+                    const timeA = new Date(window.getLastUpdateRaw(a) || 0).getTime();
+                    const timeB = new Date(window.getLastUpdateRaw(b) || 0).getTime();
+                    if (timeB !== timeA) return timeB - timeA;
+                    return a.name.localeCompare(b.name);
+                }
+                return a.name.localeCompare(b.name);
+            });
             
             const c = document.getElementById('stock-list'); 
             if (!c) return;
@@ -1480,7 +1499,6 @@
                 const lastBy = window.getLastUpdateBy(item), lastDate = window.getLastUpdateDate(item);
                 const lastUpdate = lastDate ? `🕒 ${lastDate} (${lastBy || 'N/D'})` : '🕒 Non aggiornato';
 
-                // Badge fisso di sola lettura per operatori
                 const favBadgeHtml = item.isFavorite 
                     ? `<span style="font-size:11px; font-weight:800; color:#92400e; background:#fef3c7; border:1px solid #f59e0b; padding:3px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:3px;">⭐ Preferito</span>`
                     : `<span style="font-size:11px; font-weight:600; color:#a8a29e; background:#f5f5f4; border:1px solid #e7e5e4; padding:3px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:3px;">☆ Preferito</span>`;
@@ -1506,17 +1524,29 @@
             });
         };
 
-        // ORDINI
+        // ORDINI - FILTRI E ORDINAMENTO
         window.filterOrderItems = function() {
             const q = (document.getElementById('search-order-input')?.value || '').toLowerCase();
             const cat = document.getElementById('filter-order-category')?.value || '';
             const sup = document.getElementById('filter-order-supplier')?.value || '';
+            const sortVal = document.getElementById('sort-order-select')?.value || 'name-asc';
 
             let filtered = window.inventoryData.filter(i => {
                 const matchesCat = !cat ? true : (cat === 'FAVORITES' ? i.isFavorite === true : i.category === cat);
                 return i.name.toLowerCase().includes(q) && matchesCat && (!sup || String(i.supplierId) === String(sup));
             });
-            filtered.sort((a, b) => a.name.localeCompare(b.name));
+
+            // LOGICA ORDINAMENTO AVANZATO ORDINI
+            filtered.sort((a, b) => {
+                if (sortVal === 'low-stock') {
+                    const isLowA = window.getQty(a) < window.getMin(a);
+                    const isLowB = window.getQty(b) < window.getMin(b);
+                    if (isLowA && !isLowB) return -1;
+                    if (!isLowA && isLowB) return 1;
+                    return a.name.localeCompare(b.name);
+                }
+                return a.name.localeCompare(b.name);
+            });
             
             const c = document.getElementById('order-list'); 
             if (!c) return;
@@ -1527,7 +1557,6 @@
                 const lastBy = window.getLastUpdateBy(item), lastDate = window.getLastUpdateDate(item);
                 const lastUpdateText = lastDate ? `🕒 Ultima modifica scorta: <b>${lastBy || 'Operatore'}</b> (${lastDate})` : '🕒 Scorta non ancora modificata';
 
-                // Badge fisso di sola lettura per operatori
                 const favBadgeHtml = item.isFavorite 
                     ? `<span style="font-size:11px; font-weight:800; color:#92400e; background:#fef3c7; border:1px solid #f59e0b; padding:3px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:3px;">⭐ Preferito</span>`
                     : `<span style="font-size:11px; font-weight:600; color:#a8a29e; background:#f5f5f4; border:1px solid #e7e5e4; padding:3px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:3px;">☆ Preferito</span>`;
@@ -1783,7 +1812,6 @@
         window.toggleFavorite = async function(itemId) {
             if (!window.checkAuthGuard()) return;
             
-            // Controllo permessi: Solo gli Admin possono gestire i preferiti dal Magazzino
             if (!window.currentUserProfile || window.currentUserProfile.role !== 'admin') {
                 return window.showAlert("🔒 Solo gli Admin possono gestire i preferiti dal Magazzino.");
             }
@@ -1816,7 +1844,6 @@
                         <div class="item-name-box" style="border-left-color:${supObj?.color || '#043927'};">
                             <div class="item-name">
                                 <span>${item.name}</span>
-                                <!-- Pulsante interattivo cliccabile riservato all'Admin -->
                                 <button class="star-toggle-btn ${item.isFavorite ? 'active' : ''}" onclick="toggleFavorite(${item.id})">
                                     ${item.isFavorite ? '⭐ Preferito' : '☆ Preferito'}
                                 </button>
@@ -1941,7 +1968,7 @@
 
             let sortedSupps = [...window.suppliersData].sort((a, b) => (a.orderIndex || 999) - (b.orderIndex || 999));
 
-            sortedSupps.filter(s => s.name.toLowerCase().includes(q)).forEach((s, index) => {
+            sortedSupps.filter(s => s.name.toLowerCase().includes(q)).forEach((s) => {
                 c.innerHTML += `
                     <div class="card-item">
                         <div class="item-name-box" style="border-left-color:${s.color || '#1565c0'};">
@@ -2063,7 +2090,6 @@
             const todayStr = new Date().toLocaleDateString('it-IT');
             const isAlcoholCategory = (cat) => (cat === 'Alcolici' || cat === 'Bevande');
 
-            // Calcolo automatico della larghezza colonne per evitare tagli
             const applyAutoColumnWidths = (ws, rows) => {
                 if (!rows || !rows.length) return;
                 const colWidths = rows[0].map((_, colIdx) => {
@@ -2079,7 +2105,6 @@
                 ws['!cols'] = colWidths;
             };
 
-            // Foglio Standard (Food & Supplies)
             const buildStandardSheetData = (itemsList, titleHeader) => {
                 const rows = [
                     [`MAGARI INVENTORY REPORT - ${titleHeader.toUpperCase()}`],
@@ -2104,7 +2129,6 @@
                 return ws;
             };
 
-            // Foglio Alcolici & Bevande con Subtotali e Gran Totale
             const buildAlcoholSheetData = () => {
                 const rows = [
                     [`MAGARI INVENTORY REPORT - ALCOHOL & BEVERAGES`],
@@ -2119,7 +2143,6 @@
                 let alcStockSum = 0, alcValueSum = 0;
                 let bevStockSum = 0, bevValueSum = 0;
 
-                // 1. ALCOLICI
                 rows.push(["--- ALCOHOLIC BEVERAGES ---", "", "", "", "", "", ""]);
                 alcoholItems.forEach(i => {
                     const sup = window.suppliersData.find(s => String(s.id) === String(i.supplierId))?.name || 'N/D';
@@ -2131,7 +2154,6 @@
                 rows.push(["SUBTOTAL ALCOHOL", "", "", "", alcStockSum, parseFloat(alcValueSum.toFixed(2)), ""]);
                 rows.push([""]);
 
-                // 2. BEVANDE
                 rows.push(["--- NON-ALCOHOLIC BEVERAGES & SOFT DRINKS ---", "", "", "", "", "", ""]);
                 beverageItems.forEach(i => {
                     const sup = window.suppliersData.find(s => String(s.id) === String(i.supplierId))?.name || 'N/D';
@@ -2143,7 +2165,6 @@
                 rows.push(["SUBTOTAL BEVERAGES", "", "", "", bevStockSum, parseFloat(bevValueSum.toFixed(2)), ""]);
                 rows.push([""]);
 
-                // 3. GRAN TOTALE
                 const grandStock = alcStockSum + bevStockSum;
                 const grandValue = parseFloat((alcValueSum + bevValueSum).toFixed(2));
                 rows.push(["GRAND TOTAL (ALCOHOL + BEVERAGES)", "", "", "", grandStock, grandValue, ""]);
@@ -2173,7 +2194,7 @@
             window.showAlert("📊 File Excel scaricato con la distinzione Alcolici/Bevande!");
         };
 
-        // REPORT CONSUMI ENGINE CON SUPPORTO MESE AUTOMATICO E FORMATI DATE FLESSIBILI
+        // REPORT CONSUMI ENGINE
         window.generateRealReport = function() {
             if (!window.checkAuthGuard()) return;
 
@@ -2225,7 +2246,6 @@
                         if (!h.timestamp) return false;
                         let hMonth = "";
                         
-                        // Supporto per timestamp sia italiani ("12/10/2026, 12:08") che ISO ("2026-10-12")
                         if (h.timestamp.includes('/')) {
                             const datePart = h.timestamp.split(',')[0].trim();
                             const parts = datePart.split('/');
@@ -2260,7 +2280,6 @@
                 });
             }
 
-            // Render Tabelle
             alcTbody.innerHTML = '';
             foodTbody.innerHTML = '';
             let totalAlcCost = 0;
