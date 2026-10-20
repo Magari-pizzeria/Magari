@@ -5,14 +5,18 @@
 ====================================================================
 [MAGARI APP - HISTORICAL CHANGELOG REGISTRY & ARCHIVE]
 
-- v4.2.0 STABLE (12/10/2026 - FIX REPORT MONTH PICKER, EXCEL ALCOHOL/BEVERAGES, ADMIN FAVORITES & ADVANCED SORTING):
-  1. Risolto il bug di selezione del mese nel Report Consumi con pre-compilazione automatica del mese corrente (YYYY-MM).
-  2. Ripristinato l'export Excel completo per Alcolici & Bevande con subtotali separati e gran totale.
-  3. Applicato l'auto-sizing delle colonne (!cols) in Excel per evitare il troncamento dei testi.
-  4. Riservata la modifica dei Preferiti agli utenti Admin dal Magazzino, con badge fisso di sola lettura ("⭐ Preferito" / "☆ Preferito") per gli operatori in Ordini e Scorte.
-  5. Corretto l'ordinamento "Scorte Basse": evidenzia in alto tutti i prodotti sotto la soglia minima ordinati alfabeticamente.
-  6. Corretto l'ordinamento "Ultima Modifica": ordina temporalmente dal più recente al meno recente basandosi sui timestamp reali della sede attiva.
-  7. Sincronizzato con il database di Produzione Ufficiale (magari-b7f93).
+- v4.3.1 STABLE (20/10/2026 - FIX BUG PRODOTTI NON DISPONIBILI/BLOCCATI NEL CARRELLO):
+  1. Controllo automatico prima di generare il riepilogo ordine (generateOrderSummary): azzera la quantità nel database dei prodotti nel carrello resi non disponibili o bloccati dall'Admin e avvisa l'utente.
+  2. Filtro di sicurezza unificato su updateCartBadge, confirmSingleSupplierOrder e confirmAndSaveOrderToHistory per escludere !i.isOrderBlocked e i.isAvailable !== false.
+  3. Mantenuto il blocco ingredienti riservato agli Admin nel Magazzino.
+  4. Sincronizzato con il database di Produzione Ufficiale (magari-b7f93).
+
+- v4.3.0 STABLE (20/10/2026 - FEATURE BLOCCO INGREDIENTI DA ORDINARE ADMIN & FIXES):
+  1. Implementata funzione di Blocco Ordine Ingrediente (isOrderBlocked) riservata agli Admin nel Magazzino.
+  2. Disabilitati i comandi di aggiunta al carrello nella sezione Ordini per i prodotti bloccati dall'Admin.
+  3. Mantenuta intatta la possibilità di aggiornare le giacenze di magazzino nella sezione Scorte.
+  4. Mantenuta la correzione dell'ordinamento "Scorte Basse" e "Ultima Modifica" per timestamp.
+  5. Sincronizzato con il database di Produzione Ufficiale (magari-b7f93).
 ====================================================================
 -->
     <meta charset="UTF-8">
@@ -31,11 +35,11 @@
     <meta name="apple-mobile-web-app-title" content="Magari Pizzeria">
     
     <!-- Icone Schermata Home & Favicon -->
-    <link rel="manifest" href="manifest.json?v=4.2.1">
-    <link rel="apple-touch-icon" href="logo-square.png?v=4.2.1">
-    <link rel="icon" type="image/png" href="logo-square.png?v=4.2.1">
+    <link rel="manifest" href="manifest.json?v=4.3.1">
+    <link rel="apple-touch-icon" href="logo-square.png?v=4.3.1">
+    <link rel="icon" type="image/png" href="logo-square.png?v=4.3.1">
 
-    <title>Magari v4.2.1 STABLE</title>
+    <title>Magari v4.3.1 STABLE</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -136,7 +140,7 @@
         .stock-label-main { font-size: 13px; font-weight: 600; color: var(--text-secondary); display: flex; align-items: center; }
         .stock-label-sub { font-size: 11px; font-weight: bold; margin-top: 2px; }
 
-        .action-row-btn { display: flex; gap: 8px; margin-top: 6px; border-top: 1px solid #f0f0f0; padding-top: 8px; }
+        .action-row-btn { display: flex; gap: 8px; margin-top: 6px; border-top: 1px solid #f0f0f0; padding-top: 8px; flex-wrap: wrap; }
         .btn-action-edit { background: #e3f2fd; color: #0d47a1; border: 1px solid #bbdefb; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; }
         .btn-action-del { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; }
 
@@ -227,7 +231,7 @@
             <div class="drawer-header" style="text-align: center;">
                 <img src="logo-header.png" alt="Magari Logo" style="max-width: 170px; height: auto; margin-bottom: 4px;" onerror="this.style.display='none'; document.getElementById('drawer-text-fallback').style.display='block';">
                 <div id="drawer-text-fallback" class="brand-title" style="display:none; font-size: 24px;">MAGARI</div>
-                <div class="brand-subtitle" style="font-size: 9px; background:#2e7d32;">v4.2.1 STABLE</div>
+                <div class="brand-subtitle" style="font-size: 9px; background:#2e7d32;">v4.3.1 STABLE</div>
             </div>
 
             <!-- USER ACCOUNT BANNER NELLO MENU -->
@@ -263,7 +267,7 @@
             <div class="header-brand-text">
                 <img src="logo-header.png" alt="Magari" style="height: 34px; width: auto;" onerror="this.style.display='none'; document.getElementById('header-text-fallback').style.display='block';">
                 <div id="header-text-fallback" class="brand-title" style="display:none;">MAGARI</div>
-                <div class="brand-subtitle" style="background:#2e7d32;">v4.2.0 STABLE</div>
+                <div class="brand-subtitle" style="background:#2e7d32;">v4.3.1 STABLE</div>
             </div>
             <div class="page-badge" id="page-title">Ordini</div>
         </div>
@@ -375,6 +379,7 @@
             </div>
             <div class="content-list" id="history-list"></div>
         </div>
+
         <!-- 4. MAGAZZINO (SOLO ADMIN) -->
         <div id="view-magazzino" class="view-section">
             <div class="page-lock-banner" id="lock-banner-magazzino">
@@ -382,7 +387,7 @@
             </div>
             <div class="top-bar-container">
                 <div style="font-size:11px; background:#fff3cd; color:#856404; padding:6px 10px; border-radius:6px; font-weight:600;">
-                    ⭐ <b>Gestione Preferiti:</b> Clicca su <b>"⭐ Preferito"</b> a destra del prodotto per cambiarne lo stato per gli operatori.
+                    ⭐ <b>Gestione Preferiti & Blocco Ordini:</b> Gestisci i preferiti e usa il tasto <b>"⛔ Blocca Ordine"</b> per impedire l'ordinazione di un ingrediente non disponibile.
                 </div>
                 <div style="display: flex; gap: 8px; width: 100%;">
                     <select id="filter-inventory-category" class="filter-select" onchange="filterItems()">
@@ -493,51 +498,51 @@
                 </div>
 
                 <div class="faq-item-box">
-                    <div class="faq-question">🚨 6. Cosa indicano i prodotti evidenziati in rosso?</div>
+                    <div class="faq-question">⛔ 6. Come funziona il Blocco Ordini per ingredienti non disponibili?</div>
+                    <div class="faq-answer">
+                        Gli Admin possono bloccare l'ordinazione di un ingrediente dalla sezione <b>Magazzino</b> cliccando su <b>"⛔ Blocca Ordine"</b>. Nella pagina <b>Ordini</b> la scheda del prodotto mostrerà il badge rosso <b>⛔ NON ORDINABILE</b> ed i tasti per inserirlo nel carrello saranno disattivati. Il prodotto rimarrà comunque <b>visibile ed aggiornabile nella sezione Scorte</b>.
+                    </div>
+                </div>
+
+                <div class="faq-item-box">
+                    <div class="faq-question">🚨 7. Cosa indicano i prodotti evidenziati in rosso?</div>
                     <div class="faq-answer">
                         I prodotti bordati di rosso lampeggiante hanno raggiunto o superato il <b>limite minimo di scorta</b> impostato per la sede corrente. Ordinali al più presto per evitare rotture di stock durante il servizio.
                     </div>
                 </div>
 
                 <div class="faq-item-box">
-                    <div class="faq-question">📊 7. Come scaricare il Report Inventory in Excel?</div>
+                    <div class="faq-question">📊 8. Come scaricare il Report Inventory in Excel?</div>
                     <div class="faq-answer">
                         Dalla pagina <b>📦 Scorte</b>, clicca sul pulsante verde <b>"📊 Export Inventory (Excel)"</b>. Potrai scegliere se scaricare il foglio <i>Food & Supplies</i>, il foglio <i>Alcohol & Beverages</i> (con i subtotali separati per alcolici e bibite), oppure l'intero inventario.
                     </div>
                 </div>
 
                 <div class="faq-item-box">
-                    <div class="faq-question">🐛 8. Come segnalare un bug o un errore nei prezzi/dati?</div>
+                    <div class="faq-question">🐛 9. Come segnalare un bug o un errore nei prezzi/dati?</div>
                     <div class="faq-answer">
                         Apri la voce del menu <b>🐛 Segnala Bug & Feedback</b>, seleziona la tipologia di problema, scrivi una breve spiegazione e premi <b>"🚀 Invia Segnalazione"</b>.
                     </div>
                 </div>
 
                 <div class="faq-item-box">
-                    <div class="faq-question">📢 9. Come funciona la Bacheca Avvisi Staff?</div>
+                    <div class="faq-question">📢 10. Come funziona la Bacheca Avvisi Staff?</div>
                     <div class="faq-answer">
                         Gli avvisi importanti pubblicati dall'Amministratore appaiono in cima alla schermata principale dentro una card evidenziata. Gli avvisi sono <b>specifici per la sede attiva</b> (Vasastan o Östermalm).
                     </div>
                 </div>
 
                 <div class="faq-item-box">
-                    <div class="faq-question">⭐ 10. Come funziona la gestione dei Prodotti Preferiti?</div>
+                    <div class="faq-question">⭐ 11. Come funziona la gestione dei Prodotti Preferiti?</div>
                     <div class="faq-answer">
                         Gli Admin impostano i prodotti preferiti nella sezione Magazzino. Gli operatori visualizzano l'indicatore <b>"⭐ Preferito"</b> o <b>"☆ Preferito"</b> nelle schede prodotto e possono filtrare la lista al volo selezionando <b>"⭐ Solo Preferiti"</b>.
                     </div>
                 </div>
 
                 <div class="faq-item-box">
-                    <div class="faq-question">🍷 11. Come funziona la distinzione Alcolici / Bevande negli Excel e Report?</div>
+                    <div class="faq-question">🍷 12. Come funziona la distinzione Alcolici / Bevande negli Excel e Report?</div>
                     <div class="faq-answer">
                         Gli alcolici e le bevande analcoliche vengono gestiti con due subtotali separati ed un gran totale unificato, permettendo un controllo contabile e di licenza preciso per ogni sede.
-                    </div>
-                </div>
-
-                <div class="faq-item-box">
-                    <div class="faq-question">🔄 12. Come recuperare o modificare le credenziali dell'account?</div>
-                    <div class="faq-answer">
-                        Gli amministratori possono aggiornare ruoli e nomi dal pannello <b>⚙️ Impostazioni</b>.
                     </div>
                 </div>
             </div>
@@ -1157,7 +1162,7 @@
                             <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:4px; border-top:1px dashed #e2e8f0; padding-top:6px;">
                                 ${!isMasterEmail ? `
                                     <button onclick="openUserModal('${uUid}')" style="background:#e3f2fd; color:#0d47a1; border:1px solid #bbdefb; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:600; cursor:pointer;">✏️ Modifica</button>
-                                    <button onclick="deleteUserFromAdmin('${uUid}', '${(uData.name || '').replace(/'/g, "\\'")}')" style="background:#ffebee; color:#c62828; border:1px solid #ffcdd2; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:600; cursor:pointer;">🗑️ Elimina</button>
+                                    <button onclick="deleteUserFromAdmin('${uUid}', '${(uData.name || '').replace(/'/g, "\'")}')" style="background:#ffebee; color:#c62828; border:1px solid #ffcdd2; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:600; cursor:pointer;">🗑️ Elimina</button>
                                 ` : '<span style="font-size:10px; color:#94a3b8; font-style:italic;">Account Principale</span>'}
                             </div>
                         </div>`;
@@ -1365,7 +1370,7 @@
 
         // BADGES E UI
         window.updateCartBadge = function() {
-            const activeItemsCount = window.inventoryData.filter(i => window.getOrderQty(i) > 0).length;
+            const activeItemsCount = window.inventoryData.filter(i => window.getOrderQty(i) > 0 && !i.isOrderBlocked && i.isAvailable !== false).length;
             const badge = document.getElementById('cart-badge-drawer');
             if (badge) { badge.innerText = `${activeItemsCount} da ordinare`; badge.style.display = activeItemsCount > 0 ? 'inline-block' : 'none'; }
         };
@@ -1503,12 +1508,19 @@
                     ? `<span style="font-size:11px; font-weight:800; color:#92400e; background:#fef3c7; border:1px solid #f59e0b; padding:3px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:3px;">⭐ Preferito</span>`
                     : `<span style="font-size:11px; font-weight:600; color:#a8a29e; background:#f5f5f4; border:1px solid #e7e5e4; padding:3px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:3px;">☆ Preferito</span>`;
 
+                const blockedBadgeHtml = (item.isOrderBlocked || item.isAvailable === false)
+                    ? `<span style="font-size:11px; font-weight:800; color:#991b1b; background:#fee2e2; border:1px solid #fca5a5; padding:3px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:3px;">⛔ Non Disponibile</span>`
+                    : '';
+
                 c.innerHTML += `
                     <div class="card-item ${isLow ? 'low-stock-alert' : ''}">
                         <div class="item-name-box" style="border-left-color:${sup?.color || '#043927'};">
                             <div class="item-name">
                                 <span>${item.name}</span>
-                                ${favBadgeHtml}
+                                <div style="display:flex; gap:4px; align-items:center;">
+                                    ${blockedBadgeHtml}
+                                    ${favBadgeHtml}
+                                </div>
                             </div>
                             <div class="item-subtext" style="font-size:11px; color:#555;">${lastUpdate}</div>
                             <div class="badges-row"><span class="category-label-tag">${window.getCategoryEmoji(item.category)} ${item.category}</span><span class="supplier-badge" style="background:${sup?.color || '#043927'}">${sup?.name || 'N/D'}</span></div>
@@ -1524,7 +1536,7 @@
             });
         };
 
-        // ORDINI - FILTRI E ORDINAMENTO
+        // ORDINI - FILTRI E ORDINAMENTO (GESTIONE PRODOTTO BLOCCATO O NON DISPONIBILE)
         window.filterOrderItems = function() {
             const q = (document.getElementById('search-order-input')?.value || '').toLowerCase();
             const cat = document.getElementById('filter-order-category')?.value || '';
@@ -1557,16 +1569,33 @@
                 const lastBy = window.getLastUpdateBy(item), lastDate = window.getLastUpdateDate(item);
                 const lastUpdateText = lastDate ? `🕒 Ultima modifica scorta: <b>${lastBy || 'Operatore'}</b> (${lastDate})` : '🕒 Scorta non ancora modificata';
 
+                const isUnavailable = item.isOrderBlocked || item.isAvailable === false;
+
                 const favBadgeHtml = item.isFavorite 
                     ? `<span style="font-size:11px; font-weight:800; color:#92400e; background:#fef3c7; border:1px solid #f59e0b; padding:3px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:3px;">⭐ Preferito</span>`
                     : `<span style="font-size:11px; font-weight:600; color:#a8a29e; background:#f5f5f4; border:1px solid #e7e5e4; padding:3px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:3px;">☆ Preferito</span>`;
 
+                const blockedBadgeHtml = isUnavailable
+                    ? `<span style="font-size:11px; font-weight:800; color:#991b1b; background:#fee2e2; border:1px solid #fca5a5; padding:3px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:3px;">🔴 NON DISPONIBILE</span>`
+                    : '';
+
+                const controlsHtml = isUnavailable
+                    ? `<div style="width:100%; text-align:center; padding:8px; background:#fef2f2; color:#991b1b; font-weight:800; font-size:12px; border-radius:6px; border:1px solid #fecaca;">🔴 Non disponibile dal fornitore (Non ordinabile)</div>`
+                    : `<span style="font-size:13px; font-weight:600; margin-right:auto;">Da Ordinare:</span>
+                       <button class="qty-btn" onclick="updateOrder(${item.id}, -1)">-</button>
+                       <input type="number" class="qty-input" value="${window.getOrderQty(item)}" onchange="setOrder(${item.id}, this.value)">
+                       <span class="unit-label">${item.unit}</span>
+                       <button class="qty-btn" onclick="updateOrder(${item.id}, 1)">+</button>`;
+
                 c.innerHTML += `
-                    <div class="card-item ${isLow ? 'low-stock-alert' : ''}">
-                        <div class="item-name-box" style="border-left-color:${sup?.color || '#043927'};">
+                    <div class="card-item ${isLow && !isUnavailable ? 'low-stock-alert' : ''}" style="${isUnavailable ? 'opacity:0.85; background:#fafafa;' : ''}">
+                        <div class="item-name-box" style="border-left-color:${isUnavailable ? '#dc2626' : (sup?.color || '#043927')};">
                             <div class="item-name">
                                 <span>${item.name}</span>
-                                ${favBadgeHtml}
+                                <div style="display:flex; gap:4px; align-items:center;">
+                                    ${blockedBadgeHtml}
+                                    ${favBadgeHtml}
+                                </div>
                             </div>
                             <div class="stock-warning-badge ${isLow?'alert':'normal'}">Scorta: ${qty} ${item.unit} (Min: ${min})</div>
                             <div class="item-subtext" style="font-size:11px; color:#555; background:#f8fafc; padding:4px 8px; border-radius:4px; border:1px solid #e2e8f0; margin-top:4px;">
@@ -1575,11 +1604,7 @@
                             <div class="badges-row"><span class="category-label-tag">${window.getCategoryEmoji(item.category)} ${item.category}</span><span class="supplier-badge" style="background:${sup?.color || '#043927'}">${sup?.name || 'N/D'}</span></div>
                         </div>
                         <div class="item-controls">
-                            <span style="font-size:13px; font-weight:600; margin-right:auto;">Da Ordinare:</span>
-                            <button class="qty-btn" onclick="updateOrder(${item.id}, -1)">-</button>
-                            <input type="number" class="qty-input" value="${window.getOrderQty(item)}" onchange="setOrder(${item.id}, this.value)">
-                            <span class="unit-label">${item.unit}</span>
-                            <button class="qty-btn" onclick="updateOrder(${item.id}, 1)">+</button>
+                            ${controlsHtml}
                         </div>
                     </div>`;
             });
@@ -1589,6 +1614,7 @@
             if (!window.checkAuthGuard()) return;
             const i = window.inventoryData.find(x => x.id === id); 
             if(i) { 
+                if (i.isOrderBlocked || i.isAvailable === false) return window.showAlert("⛔ Prodotto non disponibile dal fornitore.");
                 const field = window.getLocationKey() === 'ostermalm' ? 'orderQty_ostermalm' : 'orderQty_vasastan';
                 await updateDoc(doc(db, "inventory", String(id)), { [field]: Math.max(0, window.getOrderQty(i) + d) }); 
             } 
@@ -1597,19 +1623,31 @@
             if (!window.checkAuthGuard()) return;
             const i = window.inventoryData.find(x => x.id === id); 
             if(i) { 
+                if (i.isOrderBlocked || i.isAvailable === false) return window.showAlert("⛔ Prodotto non disponibile dal fornitore.");
                 const field = window.getLocationKey() === 'ostermalm' ? 'orderQty_ostermalm' : 'orderQty_vasastan';
                 await updateDoc(doc(db, "inventory", String(id)), { [field]: Math.max(0, parseFloat(v) || 0) }); 
             } 
         };
 
-        window.generateOrderSummary = function() {
+        window.generateOrderSummary = async function() {
             if (!window.checkAuthGuard()) return;
             const op = window.currentUserProfile.name;
             const dateVal = document.getElementById('order-date-picker').value;
             if (!dateVal) return window.showAlert("🚚 Seleziona una data di consegna.");
 
-            const items = window.inventoryData.filter(i => window.getOrderQty(i) > 0);
-            if (items.length === 0) return window.showAlert("🛒 Nessun prodotto selezionato.");
+            // Azzera e rimuove dal carrello i prodotti diventati Non Disponibili o Bloccati
+            const unavailableInCart = window.inventoryData.filter(i => window.getOrderQty(i) > 0 && (i.isOrderBlocked || i.isAvailable === false));
+            if (unavailableInCart.length > 0) {
+                const removedNames = unavailableInCart.map(i => i.name).join(', ');
+                const batch = writeBatch(db);
+                const field = window.getLocationKey() === 'ostermalm' ? 'orderQty_ostermalm' : 'orderQty_vasastan';
+                unavailableInCart.forEach(i => batch.update(doc(db, "inventory", String(i.id)), { [field]: 0 }));
+                await batch.commit();
+                window.showAlert(`⚠️ Prodotti non disponibili rimossi dall'ordine: ${removedNames}`);
+            }
+
+            const items = window.inventoryData.filter(i => window.getOrderQty(i) > 0 && !i.isOrderBlocked && i.isAvailable !== false);
+            if (items.length === 0) return window.showAlert("🛒 Nessun prodotto disponibile ed ordinabile selezionato.");
 
             window.renderSummaryModalContent(op, dateVal);
             document.getElementById('summary-modal').classList.add('active');
@@ -1617,7 +1655,7 @@
         };
 
         window.renderSummaryModalContent = function(op, dateVal) {
-            const items = window.inventoryData.filter(i => window.getOrderQty(i) > 0);
+            const items = window.inventoryData.filter(i => window.getOrderQty(i) > 0 && !i.isOrderBlocked && i.isAvailable !== false);
             let groups = {};
             items.forEach(i => { if(!groups[i.supplierId]) groups[i.supplierId] = []; groups[i.supplierId].push(i); });
             
@@ -1656,7 +1694,7 @@
         };
 
         window.confirmSingleSupplierOrder = async function(sId, operator, dateVal) {
-            const items = window.inventoryData.filter(i => String(i.supplierId) === String(sId) && window.getOrderQty(i) > 0);
+            const items = window.inventoryData.filter(i => String(i.supplierId) === String(sId) && window.getOrderQty(i) > 0 && !i.isOrderBlocked && i.isAvailable !== false);
             if (items.length === 0) return;
             const sup = window.suppliersData.find(s => String(s.id) === String(sId));
             const nowStr = new Date().toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -1678,7 +1716,7 @@
         };
 
         window.confirmAndSaveOrderToHistory = async function(operator) {
-            const items = window.inventoryData.filter(i => window.getOrderQty(i) > 0);
+            const items = window.inventoryData.filter(i => window.getOrderQty(i) > 0 && !i.isOrderBlocked && i.isAvailable !== false);
             if (items.length === 0) return;
             let groups = {}; items.forEach(i => { if(!groups[i.supplierId]) groups[i.supplierId] = []; groups[i.supplierId].push(i); });
             const nowStr = new Date().toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -1808,19 +1846,30 @@
             });
         };
 
-        // MAGAZZINO ED EDITOR - FUNZIONE PREFERITI PROTETTA PER ADMIN
+        // MAGAZZINO ED EDITOR - FUNZIONI PREFERITI E BLOCCO ORDINE RESERVATED ADMIN
         window.toggleFavorite = async function(itemId) {
             if (!window.checkAuthGuard()) return;
-            
             if (!window.currentUserProfile || window.currentUserProfile.role !== 'admin') {
                 return window.showAlert("🔒 Solo gli Admin possono gestire i preferiti dal Magazzino.");
             }
-
             const item = window.inventoryData.find(x => x.id === itemId);
             if (item) {
                 const newStatus = !item.isFavorite;
                 await updateDoc(doc(db, "inventory", String(itemId)), { isFavorite: newStatus });
                 window.showAlert(newStatus ? `⭐ ${item.name} aggiunto ai Preferiti!` : `☆ ${item.name} rimosso dai Preferiti.`);
+            }
+        };
+
+        window.toggleBlockOrder = async function(itemId) {
+            if (!window.checkAuthGuard()) return;
+            if (!window.currentUserProfile || window.currentUserProfile.role !== 'admin') {
+                return window.showAlert("🔒 Solo gli Admin possono bloccare o sbloccare gli ordini di un prodotto.");
+            }
+            const item = window.inventoryData.find(x => x.id === itemId);
+            if (item) {
+                const newBlockedStatus = !(item.isOrderBlocked || item.isAvailable === false);
+                await updateDoc(doc(db, "inventory", String(itemId)), { isOrderBlocked: newBlockedStatus, isAvailable: !newBlockedStatus });
+                window.showAlert(newBlockedStatus ? `⛔ ${item.name} bloccato dagli ordini!` : `✅ ${item.name} sbloccato per gli ordini!`);
             }
         };
 
@@ -1839,6 +1888,12 @@
                 const minVas = (item.minQty_vasastan !== undefined && item.minQty_vasastan !== null) ? item.minQty_vasastan : (item.minQty ?? 2);
                 const minOst = (item.minQty_ostermalm !== undefined && item.minQty_ostermalm !== null) ? item.minQty_ostermalm : 2;
 
+                const isUnavailable = item.isOrderBlocked || item.isAvailable === false;
+                const blockBtnText = isUnavailable ? '🔓 Sblocca Ordine' : '⛔ Blocca Ordine';
+                const blockBtnStyle = isUnavailable 
+                    ? 'background:#fee2e2; color:#991b1b; border:1px solid #fca5a5;' 
+                    : 'background:#f0fdf4; color:#166534; border:1px solid #bbf7d0;';
+
                 c.innerHTML += `
                     <div class="card-item">
                         <div class="item-name-box" style="border-left-color:${supObj?.color || '#043927'};">
@@ -1852,9 +1907,11 @@
                             <div class="item-subtext" style="font-weight: 600; color: var(--primary); margin-top: 4px;">
                                 📉 Min: Vasastan ${minVas} ${item.unit} | Östermalm ${minOst} ${item.unit}
                             </div>
+                            ${isUnavailable ? `<div style="font-size:11px; font-weight:800; color:#991b1b; margin-top:4px;">⛔ Prodotto Bloccato per gli Ordini</div>` : ''}
                         </div>
                         <div class="action-row-btn">
                             <button class="btn-action-edit" onclick="openAddModal(${item.id})">✏ Modifica</button>
+                            <button style="${blockBtnStyle} padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer;" onclick="toggleBlockOrder(${item.id})">${blockBtnText}</button>
                             <button class="btn-action-del" onclick="deleteInventoryItem(${item.id})">🗑 Elimina</button>
                         </div>
                     </div>`;
@@ -1912,7 +1969,7 @@
                 const newId = Date.now();
                 await setDoc(doc(db, "inventory", String(newId)), { 
                     id: newId, name, category: cat, supplierId: supId, minQty_vasastan: minVasastan, minQty_ostermalm: minOstermalm, 
-                    orderQty_vasastan: 0, orderQty_ostermalm: 0, unit, price, qty_vasastan: 0, qty_ostermalm: 0, isFavorite: false 
+                    orderQty_vasastan: 0, orderQty_ostermalm: 0, unit, price, qty_vasastan: 0, qty_ostermalm: 0, isFavorite: false, isOrderBlocked: false, isAvailable: true 
                 });
             }
             closeAddModal(); window.showAlert("✅ Prodotto salvato!");
