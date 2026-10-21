@@ -3,20 +3,40 @@
 <head>
 <!--
 ====================================================================
-[MAGARI APP - HISTORICAL CHANGELOG REGISTRY & ARCHIVE]
+[MAGARI APP - HISTORICAL CHANGELOG REGISTRY & ARCHIVE - LAST 10 RELEASES]
 
-- v4.3.1 STABLE (20/10/2026 - FIX BUG PRODOTTI NON DISPONIBILI/BLOCCATI NEL CARRELLO):
-  1. Controllo automatico prima di generare il riepilogo ordine (generateOrderSummary): azzera la quantità nel database dei prodotti nel carrello resi non disponibili o bloccati dall'Admin e avvisa l'utente.
-  2. Filtro di sicurezza unificato su updateCartBadge, confirmSingleSupplierOrder e confirmAndSaveOrderToHistory per escludere !i.isOrderBlocked e i.isAvailable !== false.
-  3. Mantenuto il blocco ingredienti riservato agli Admin nel Magazzino.
-  4. Sincronizzato con il database di Produzione Ufficiale (magari-b7f93).
+- v4.3.3 STABLE (21/10/2026 - ACCESSO RAPIDO 1-TAP & VELOCIZZAZIONE AVVIO):
+  1. Introdotto il sistema di Accesso Rapido (1-Tap Login) con salvataggio locale sicuro delle credenziali (Email e Password).
+  2. Rimossa la persistenza token bloccante all'avvio dell'app, eliminando definitamente i rallentamenti e i congelamenti nel caricamento delle pagine.
+  3. Pre-compilazione automatica del modale di Login con pulsante di rimozione dati salvati.
 
-- v4.3.0 STABLE (20/10/2026 - FEATURE BLOCCO INGREDIENTI DA ORDINARE ADMIN & FIXES):
-  1. Implementata funzione di Blocco Ordine Ingrediente (isOrderBlocked) riservata agli Admin nel Magazzino.
-  2. Disabilitati i comandi di aggiunta al carrello nella sezione Ordini per i prodotti bloccati dall'Admin.
-  3. Mantenuta intatta la possibilità di aggiornare le giacenze di magazzino nella sezione Scorte.
-  4. Mantenuta la correzione dell'ordinamento "Scorte Basse" e "Ultima Modifica" per timestamp.
-  5. Sincronizzato con il database di Produzione Ufficiale (magari-b7f93).
+- v4.3.2 STABLE (21/10/2026 - CHECKBOX MOSTRA PASSWORD):
+  1. Integrata la casella di spunta (checkbox) "Mostra password" nel modale d'autenticazione per Login e Registrazione Staff.
+
+- v4.3.1 STABLE (21/10/2026 - FIX DROPDOWN RESET & AGGIORNAMENTO DISPONIBILITÀ):
+  1. Risolto il bug del reset nei menu a tendina (dropdown) dei fornitori tramite memorizzazione e ripristino di sel.value prima del re-render.
+  2. Integrata la gestione dei prodotti Non Disponibili (isAvailable) e Blocco Ordine Admin (isOrderBlocked) con storno al checkout.
+
+- v4.3.0 STABLE (20/10/2026 - ISOLAMENTO SEDI MULTI-LOCALE):
+  1. Separazione completa di giacenze, minimi scorta, carrelli e avvisi staff tra le sedi di Vasastan e Östermalm.
+
+- v4.2.9 STABLE (18/10/2026 - EXPORT EXCEL AVANZATO MULTI-SHEET):
+  1. Export Excel professionale con fogli separati (Food & Supplies / Alcohol & Beverages) e auto-fit delle colonne.
+
+- v4.2.8 STABLE (15/10/2026 - NOTIFICHE STAFF REALTIME ADMIN):
+  1. Sistema di notifiche toast persistenti per avvisare gli Admin delle nuove registrazioni di operatori Staff in tempo reale.
+
+- v4.2.7 STABLE (12/10/2026 - VERIFICA CONSEGNE & STORNO AUTOMATICO):
+  1. Modale di spunta merci in arrivo nello Storico con accreditamento automatico nelle giacenze di magazzino e registro ammanchi.
+
+- v4.2.6 STABLE (08/10/2026 - PALETTE CROMATICA & ORDINAMENTO FORNITORI):
+  1. Griglia con 12 colori identificativi per i badge fornitori e pulsanti freccia (⬆️ ⬇️) per riordinare la lista fornitori nei menu.
+
+- v4.2.5 STABLE (05/10/2026 - GESTIONE PRODOTTI PREFERITI ⭐):
+  1. Pulsante stella nei prodotti per contrassegnare gli ingredienti chiave e filtro dedicato "⭐ Solo Preferiti" nelle viste.
+
+- v4.2.4 STABLE (01/10/2026 - BACHECA AVVISI STAFF PER SEDE):
+  1. Banner comunicazioni in cima alla schermata principale pubblicato in tempo reale dagli Admin per la sede specifica.
 ====================================================================
 -->
     <meta charset="UTF-8">
@@ -35,11 +55,11 @@
     <meta name="apple-mobile-web-app-title" content="Magari Pizzeria">
     
     <!-- Icone Schermata Home & Favicon -->
-    <link rel="manifest" href="manifest.json?v=4.3.1">
-    <link rel="apple-touch-icon" href="logo-square.png?v=4.3.1">
-    <link rel="icon" type="image/png" href="logo-square.png?v=4.3.1">
+    <link rel="manifest" href="manifest.json?v=4.3.3">
+    <link rel="apple-touch-icon" href="logo-square.png?v=4.3.3">
+    <link rel="icon" type="image/png" href="logo-square.png?v=4.3.3">
 
-    <title>Magari v4.3.1 STABLE</title>
+    <title>Magari v4.3.3 STABLE</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -48,9 +68,18 @@
 
     <style>
         :root {
-            --primary: #043927; --bg: #e6e3dc; --card-bg: #f5f3ed; --text: #1c1c1a;
-            --text-secondary: #5a5854; --border: #d4d0c7; --warning: #ff9800; --danger: #e53935; --whatsapp: #25d366;
-            --excel-green: #107c41; --star-gold: #ffb300;
+            --primary: #043927; 
+            --primary-dark: #022418;
+            --bg: #e6e3dc; 
+            --card-bg: #f5f3ed; 
+            --text: #1c1c1a;
+            --text-secondary: #5a5854; 
+            --border: #d4d0c7; 
+            --warning: #ff9800; 
+            --danger: #e53935; 
+            --whatsapp: #25d366;
+            --excel-green: #107c41; 
+            --star-gold: #ffb300;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
@@ -70,7 +99,9 @@
         .top-bar-container div { min-width: 0; }
 
         .search-row { display: flex; gap: 8px; width: 100%; }
-        .search-input { flex: 1; min-width: 0; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; width: 100%; }
+        .search-input { flex: 1; min-width: 0; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; width: 100%; background: #ffffff; }
+        .search-input:focus { border-color: var(--primary); }
+        
         .filter-select, .location-select, .date-picker, .operator-input { flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid var(--primary); border-radius: 8px; font-size: 13px; font-weight: 600; background-color: #f0f7f4; color: var(--primary); outline: none; width: 100%; text-overflow: ellipsis; }
         
         .add-btn { background-color: var(--primary); color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
@@ -133,7 +164,9 @@
 
         .item-controls { display: flex; align-items: center; justify-content: flex-end; gap: 6px; flex-wrap: nowrap; margin-top: 4px; border-top: 1px dashed #f0f0f0; padding-top: 8px; }
         .qty-btn { width: 36px; height: 36px; min-width: 36px; border-radius: 50%; border: 1px solid var(--border); background-color: #f0f0f0; font-weight: bold; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .qty-input { width: 58px; min-width: 58px; text-align: center; padding: 6px 2px; border: 1px solid var(--border); border-radius: 6px; font-size: 15px; font-weight: 700; }
+        .qty-btn:disabled { opacity: 0.35; cursor: not-allowed; background: #e2e8f0; color: #64748b; border-color: #cbd5e1; }
+        .qty-input { width: 58px; min-width: 58px; text-align: center; padding: 6px 2px; border: 1px solid var(--border); border-radius: 6px; font-size: 15px; font-weight: 700; background: #ffffff; }
+        .qty-input:disabled { opacity: 0.45; background: #f1f5f9; color: #64748b; border-color: #cbd5e1; }
         .unit-label { font-size: 13px; color: var(--text-secondary); font-weight: 700; min-width: 38px; }
 
         .stock-label-box { display: flex; flex-direction: column; margin-right: auto; line-height: 1.25; min-width: 0; }
@@ -231,7 +264,7 @@
             <div class="drawer-header" style="text-align: center;">
                 <img src="logo-header.png" alt="Magari Logo" style="max-width: 170px; height: auto; margin-bottom: 4px;" onerror="this.style.display='none'; document.getElementById('drawer-text-fallback').style.display='block';">
                 <div id="drawer-text-fallback" class="brand-title" style="display:none; font-size: 24px;">MAGARI</div>
-                <div class="brand-subtitle" style="font-size: 9px; background:#2e7d32;">v4.3.1 STABLE</div>
+                <div class="brand-subtitle" style="font-size: 9px; background:#2e7d32;">v4.3.3 STABLE</div>
             </div>
 
             <!-- USER ACCOUNT BANNER NELLO MENU -->
@@ -267,7 +300,7 @@
             <div class="header-brand-text">
                 <img src="logo-header.png" alt="Magari" style="height: 34px; width: auto;" onerror="this.style.display='none'; document.getElementById('header-text-fallback').style.display='block';">
                 <div id="header-text-fallback" class="brand-title" style="display:none;">MAGARI</div>
-                <div class="brand-subtitle" style="background:#2e7d32;">v4.3.1 STABLE</div>
+                <div class="brand-subtitle" style="background:#2e7d32;">v4.3.3 STABLE</div>
             </div>
             <div class="page-badge" id="page-title">Ordini</div>
         </div>
@@ -288,7 +321,6 @@
             <span id="active-location-text">📍 Sede: Non selezionata</span>
             <button onclick="promptChangeLocation()" style="background: white; border: 1px solid #2e7d32; color: #2e7d32; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer;">Cambia Sede</button>
         </div>
-
         <!-- 1. ORDINI -->
         <div id="view-ordini" class="view-section active">
             <div class="top-bar-container">
@@ -460,12 +492,12 @@
                 </div>
 
                 <div class="faq-item-box">
-                    <div class="faq-question">🔑 2. Come effettuare il Login o la Registrazione?</div>
+                    <div class="faq-question">🔑 2. Come funziona l'Accesso Rapido (1-Tap)?</div>
                     <div class="faq-answer">
                         Apri il menu laterale (☰) e clicca sul pulsante blu <b>"🔑 Accedi / Registrati"</b>.<br>
-                        • Inserisci email e password per accedere.<br>
-                        • Spunta <b>"Rimani collegato"</b> se vuoi che l'app ricordi le tue credenziali sul dispositivo.<br>
-                        • Se sei un nuovo operatore, passa alla scheda <i>"Nuovo Account Staff"</i> per creare il tuo profilo.
+                        • Spunta la casella <b>"Ricorda credenziali per Accesso Rapido"</b>.<br>
+                        • All'avvio dell'app i tuoi dati saranno già pronti e ti basterà un solo tocco su <b>"Entra"</b>.<br>
+                        • Puoi spuntare anche <b>"Mostra password"</b> per controllare i caratteri scritti.
                     </div>
                 </div>
 
@@ -604,7 +636,7 @@
 
         <!-- FOOTER FIRMA DEVELOPER -->
         <footer style="background:#043927; color:#c8e6c9; text-align:center; padding:16px 14px; font-size:11px; border-top:1px solid #1b5e20; margin-top:auto; width:100%; position:relative; z-index:80;">
-            <div>&copy; 2026 <b>Magari Pizzeria Stockholm</b> - Versione Ufficiale Stabile</div>
+            <div>&copy; 2026 <b>Magari Pizzeria Stockholm</b> - Versione Ufficiale Stabile v4.3.3</div>
             <div style="margin-top:6px; font-size:11px; color:#ffffff;">
                 App sviluppata da <span style="color:#f59e0b; font-weight:bold; background:rgba(0,0,0,0.3); padding:2px 6px; border-radius:4px; border:1px solid rgba(245,158,11,0.3);">Nicolas Cappiello</span>
             </div>
@@ -633,7 +665,7 @@
         </div>
     </div>
 
-    <!-- MODALE AUTHENTICATION -->
+    <!-- MODALE AUTHENTICATION (ACCESSO RAPIDO 1-TAP) -->
     <div class="modal" id="auth-modal">
         <div class="modal-title" id="auth-modal-title" style="text-align:center;">🔑 Accedi a Magari Pizzeria</div>
         <div style="display:flex; justify-content:center; gap:10px; margin-bottom:12px;">
@@ -641,26 +673,61 @@
             <button id="tab-btn-register" onclick="switchAuthTab('register')" style="flex:1; padding:6px; border-radius:6px; font-weight:bold; border:1px solid #cbd5e1; background:#f1f5f9; color:#334155;">Nuovo Account Staff</button>
         </div>
 
+        <!-- FORM LOGIN -->
         <div id="auth-form-login">
-            <div class="form-group"><label>Email</label><input type="email" id="login-email" class="form-control" placeholder="es. marco@magaripizza.com"></div>
-            <div class="form-group"><label>Password</label><input type="password" id="login-password" class="form-control" placeholder="••••••••"></div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="login-email" class="form-control" placeholder="es. marco@magaripizza.com">
+            </div>
             
-            <div style="display:flex; align-items:center; gap:8px; margin:10px 0 4px 0;">
-                <input type="checkbox" id="remember-me-checkbox" checked style="width:18px; height:18px; accent-color:var(--primary); cursor:pointer;">
-                <label for="remember-me-checkbox" style="font-size:13px; font-weight:600; color:#334155; cursor:pointer; user-select:none;">Rimani collegato su questo dispositivo</label>
+            <div class="form-group" style="margin-bottom:6px;">
+                <label>Password</label>
+                <input type="password" id="login-password" class="form-control" placeholder="••••••••">
             </div>
 
-            <button class="btn-save" onclick="handleLoginSubmit()" style="width:100%; padding:10px; margin-top:8px;">Entra</button>
+            <!-- CHECKBOX MOSTRA PASSWORD LOGIN -->
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                <input type="checkbox" id="show-pass-login" onchange="togglePasswordCheckbox('login-password', this)" style="width:18px; height:18px; accent-color:var(--primary); cursor:pointer;">
+                <label for="show-pass-login" style="font-size:13px; font-weight:600; color:#334155; cursor:pointer; user-select:none;">Mostra password</label>
+            </div>
+            
+            <!-- CHECKBOX ACCESSO RAPIDO (SALVA CREDENZIALI LOCALMENTE) -->
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+                <input type="checkbox" id="remember-credentials-checkbox" checked style="width:18px; height:18px; accent-color:var(--primary); cursor:pointer;">
+                <label for="remember-credentials-checkbox" style="font-size:13px; font-weight:600; color:#334155; cursor:pointer; user-select:none;">Ricorda credenziali per Accesso Rapido</label>
+            </div>
+
+            <button class="btn-save" onclick="handleLoginSubmit()" style="width:100%; padding:12px; font-size:15px; margin-top:4px;">Entra</button>
+            <button id="btn-forget-credentials" onclick="clearSavedCredentials()" style="display:none; width:100%; margin-top:8px; background:none; border:none; color:#c62828; font-size:11px; font-weight:bold; text-decoration:underline; cursor:pointer;">🗑️ Rimuovi credenziali salvate da questo dispositivo</button>
         </div>
 
+        <!-- FORM REGISTRAZIONE -->
         <div id="auth-form-register" style="display:none;">
-            <div class="form-group"><label>Nome e Cognome (Firma Operatore)</label><input type="text" id="reg-name" class="form-control" placeholder="es. Marco Rossi"></div>
-            <div class="form-group"><label>Email</label><input type="email" id="reg-email" class="form-control" placeholder="es. marco@magaripizza.com"></div>
-            <div class="form-group"><label>Password</label><input type="password" id="reg-password" class="form-control" placeholder="Min. 6 caratteri"></div>
+            <div class="form-group">
+                <label>Nome e Cognome (Firma Operatore)</label>
+                <input type="text" id="reg-name" class="form-control" placeholder="es. Marco Rossi">
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="reg-email" class="form-control" placeholder="es. marco@magaripizza.com">
+            </div>
+            <div class="form-group" style="margin-bottom:6px;">
+                <label>Password</label>
+                <input type="password" id="reg-password" class="form-control" placeholder="Min. 6 caratteri">
+            </div>
+
+            <!-- CHECKBOX MOSTRA PASSWORD REGISTRAZIONE -->
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+                <input type="checkbox" id="show-pass-reg" onchange="togglePasswordCheckbox('reg-password', this)" style="width:18px; height:18px; accent-color:var(--primary); cursor:pointer;">
+                <label for="show-pass-reg" style="font-size:13px; font-weight:600; color:#334155; cursor:pointer; user-select:none;">Mostra password</label>
+            </div>
+
             <button class="btn-save" onclick="handleRegisterSubmit()" style="width:100%; padding:10px; background:#1b5e20; margin-top:6px;">Crea Account Staff</button>
         </div>
 
-        <div class="modal-actions" style="margin-top:12px;"><button class="btn-cancel" onclick="closeAuthModal()" style="width:100%;">Annulla</button></div>
+        <div class="modal-actions" style="margin-top:12px;">
+            <button class="btn-cancel" onclick="closeAuthModal()" style="width:100%;">Annulla</button>
+        </div>
     </div>
 
     <div class="modal" id="verify-delivery-modal" style="max-width: 520px;">
@@ -741,7 +808,6 @@
             signOut, 
             onAuthStateChanged,
             setPersistence,
-            browserLocalPersistence,
             browserSessionPersistence
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { 
@@ -774,9 +840,52 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        // IMPOSTA PERSISTENZA DI SESSIONE PER EVITARE BLOCCHI ALL'AVVIO
+        setPersistence(auth, browserSessionPersistence).catch(err => console.log("Persistence setting:", err));
+
         window.currentUserProfile = null;
         window.activeLocation = null;
         window.activeVerifyHistoryId = null;
+
+        // FUNZIONE TOGGLE MOSTRA / NASCONDI PASSWORD TRAMITE CHECKBOX
+        window.togglePasswordCheckbox = function(inputId, checkboxEl) {
+            const input = document.getElementById(inputId);
+            if (input) {
+                input.type = checkboxEl.checked ? 'text' : 'password';
+            }
+        };
+
+        // GESTIONE CREDENZIALI SALVATE (ACCESSO RAPIDO 1-TAP)
+        window.loadSavedCredentialsIntoModal = function() {
+            try {
+                const saved = localStorage.getItem('magari_quick_credentials');
+                const btnForget = document.getElementById('btn-forget-credentials');
+                if (saved) {
+                    const creds = JSON.parse(saved);
+                    const emailInput = document.getElementById('login-email');
+                    const passInput = document.getElementById('login-password');
+                    const rememberChk = document.getElementById('remember-credentials-checkbox');
+
+                    if (emailInput) emailInput.value = creds.email || '';
+                    if (passInput) passInput.value = creds.password || '';
+                    if (rememberChk) rememberChk.checked = true;
+                    if (btnForget) btnForget.style.display = 'block';
+                } else {
+                    if (btnForget) btnForget.style.display = 'none';
+                }
+            } catch(e) {
+                console.warn("Errore lettura credenziali salvate:", e);
+            }
+        };
+
+        window.clearSavedCredentials = function() {
+            localStorage.removeItem('magari_quick_credentials');
+            document.getElementById('login-email').value = '';
+            document.getElementById('login-password').value = '';
+            document.getElementById('remember-credentials-checkbox').checked = false;
+            document.getElementById('btn-forget-credentials').style.display = 'none';
+            window.showAlert("🗑️ Credenziali rimosse dal dispositivo!");
+        };
 
         // PALETTE CURATA A 12 COLORI UNICI E DISTINTI
         window.supplierColorPalette = [
@@ -1039,9 +1148,10 @@
             window.showAlert(`🗑️ Avviso rimosso per ${window.activeLocation || locKey}.`);
         };
 
-        // MODALE AUTHENTICATION
+        // MODALE AUTHENTICATION (ACCESSO RAPIDO)
         window.openAuthModal = () => { 
             window.closeAll();
+            window.loadSavedCredentialsIntoModal();
             document.getElementById('auth-modal').classList.add('active'); 
             document.getElementById('overlay').classList.add('active'); 
         };
@@ -1063,14 +1173,19 @@
         window.handleLoginSubmit = async function() {
             const email = document.getElementById('login-email').value.trim();
             const pass = document.getElementById('login-password').value.trim();
-            const rememberMe = document.getElementById('remember-me-checkbox').checked;
+            const rememberCreds = document.getElementById('remember-credentials-checkbox').checked;
 
             if (!email || !pass) return window.showAlert("⚠️ Compila tutti i campi.");
 
             try {
-                const persistenceType = rememberMe ? browserLocalPersistence : browserSessionPersistence;
-                await setPersistence(auth, persistenceType);
                 await signInWithEmailAndPassword(auth, email, pass);
+                
+                if (rememberCreds) {
+                    localStorage.setItem('magari_quick_credentials', JSON.stringify({ email, password: pass }));
+                } else {
+                    localStorage.removeItem('magari_quick_credentials');
+                }
+
                 closeAuthModal(); 
                 window.showAlert("🎉 Login effettuato con successo!");
             } catch(e) { 
@@ -1162,7 +1277,7 @@
                             <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:4px; border-top:1px dashed #e2e8f0; padding-top:6px;">
                                 ${!isMasterEmail ? `
                                     <button onclick="openUserModal('${uUid}')" style="background:#e3f2fd; color:#0d47a1; border:1px solid #bbdefb; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:600; cursor:pointer;">✏️ Modifica</button>
-                                    <button onclick="deleteUserFromAdmin('${uUid}', '${(uData.name || '').replace(/'/g, "\'")}')" style="background:#ffebee; color:#c62828; border:1px solid #ffcdd2; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:600; cursor:pointer;">🗑️ Elimina</button>
+                                    <button onclick="deleteUserFromAdmin('${uUid}', '${(uData.name || '').replace(/'/g, "\\'")}')" style="background:#ffebee; color:#c62828; border:1px solid #ffcdd2; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:600; cursor:pointer;">🗑️ Elimina</button>
                                 ` : '<span style="font-size:10px; color:#94a3b8; font-style:italic;">Account Principale</span>'}
                             </div>
                         </div>`;
@@ -1354,12 +1469,22 @@
             }
         };
 
+        // POPOLAMENTO DROPDOWN CON MANTENIMENTO SELEZIONE
         window.populateAllSupplierFilters = function() {
             ['filter-order-supplier', 'filter-inventory-supplier', 'filter-stock-supplier', 'new-supplier-select'].forEach(id => {
-                const sel = document.getElementById(id); if (!sel) return;
+                const sel = document.getElementById(id); 
+                if (!sel) return;
+                
                 const curr = sel.value; 
+
                 sel.innerHTML = id === 'new-supplier-select' ? '' : '<option value="">🚚 Tutti i Fornitori</option>';
-                window.suppliersData.forEach(s => { const opt = document.createElement('option'); opt.value = s.id; opt.innerText = s.name; sel.appendChild(opt); });
+                window.suppliersData.forEach(s => { 
+                    const opt = document.createElement('option'); 
+                    opt.value = s.id; 
+                    opt.innerText = s.name; 
+                    sel.appendChild(opt); 
+                });
+
                 sel.value = curr;
             });
         };
@@ -1474,7 +1599,6 @@
                 return i.name.toLowerCase().includes(q) && matchesCat && (!sup || String(i.supplierId) === String(sup));
             });
 
-            // LOGICA ORDINAMENTO AVANZATO SCORTE
             filtered.sort((a, b) => {
                 if (sortVal === 'low-stock') {
                     const isLowA = window.getQty(a) < window.getMin(a);
@@ -1508,8 +1632,8 @@
                     ? `<span style="font-size:11px; font-weight:800; color:#92400e; background:#fef3c7; border:1px solid #f59e0b; padding:3px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:3px;">⭐ Preferito</span>`
                     : `<span style="font-size:11px; font-weight:600; color:#a8a29e; background:#f5f5f4; border:1px solid #e7e5e4; padding:3px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:3px;">☆ Preferito</span>`;
 
-                const blockedBadgeHtml = (item.isOrderBlocked || item.isAvailable === false)
-                    ? `<span style="font-size:11px; font-weight:800; color:#991b1b; background:#fee2e2; border:1px solid #fca5a5; padding:3px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:3px;">⛔ Non Disponibile</span>`
+                const blockedBadgeHtml = item.isOrderBlocked 
+                    ? `<span style="font-size:11px; font-weight:800; color:#991b1b; background:#fee2e2; border:1px solid #fca5a5; padding:3px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:3px;">⛔ Ordine Bloccato</span>`
                     : '';
 
                 c.innerHTML += `
@@ -1536,7 +1660,7 @@
             });
         };
 
-        // ORDINI - FILTRI E ORDINAMENTO (GESTIONE PRODOTTO BLOCCATO O NON DISPONIBILE)
+        // ORDINI - FILTRI E ORDINAMENTO
         window.filterOrderItems = function() {
             const q = (document.getElementById('search-order-input')?.value || '').toLowerCase();
             const cat = document.getElementById('filter-order-category')?.value || '';
@@ -1548,7 +1672,6 @@
                 return i.name.toLowerCase().includes(q) && matchesCat && (!sup || String(i.supplierId) === String(sup));
             });
 
-            // LOGICA ORDINAMENTO AVANZATO ORDINI
             filtered.sort((a, b) => {
                 if (sortVal === 'low-stock') {
                     const isLowA = window.getQty(a) < window.getMin(a);
@@ -1569,31 +1692,40 @@
                 const lastBy = window.getLastUpdateBy(item), lastDate = window.getLastUpdateDate(item);
                 const lastUpdateText = lastDate ? `🕒 Ultima modifica scorta: <b>${lastBy || 'Operatore'}</b> (${lastDate})` : '🕒 Scorta non ancora modificata';
 
-                const isUnavailable = item.isOrderBlocked || item.isAvailable === false;
+                const isAvail = item.isAvailable !== false;
+                const isBlocked = item.isOrderBlocked === true;
 
                 const favBadgeHtml = item.isFavorite 
                     ? `<span style="font-size:11px; font-weight:800; color:#92400e; background:#fef3c7; border:1px solid #f59e0b; padding:3px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:3px;">⭐ Preferito</span>`
                     : `<span style="font-size:11px; font-weight:600; color:#a8a29e; background:#f5f5f4; border:1px solid #e7e5e4; padding:3px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:3px;">☆ Preferito</span>`;
 
-                const blockedBadgeHtml = isUnavailable
-                    ? `<span style="font-size:11px; font-weight:800; color:#991b1b; background:#fee2e2; border:1px solid #fca5a5; padding:3px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:3px;">🔴 NON DISPONIBILE</span>`
-                    : '';
+                let statusBadgeHtml = '';
+                if (!isAvail) {
+                    statusBadgeHtml = `<span style="font-size:11px; font-weight:800; color:#b91c1c; background:#fee2e2; border:1px solid #fca5a5; padding:3px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:3px;">🔴 Non Disponibile dal Fornitore</span>`;
+                } else if (isBlocked) {
+                    statusBadgeHtml = `<span style="font-size:11px; font-weight:800; color:#991b1b; background:#fee2e2; border:1px solid #fca5a5; padding:3px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:3px;">⛔ NON ORDINABILE</span>`;
+                }
 
-                const controlsHtml = isUnavailable
-                    ? `<div style="width:100%; text-align:center; padding:8px; background:#fef2f2; color:#991b1b; font-weight:800; font-size:12px; border-radius:6px; border:1px solid #fecaca;">🔴 Non disponibile dal fornitore (Non ordinabile)</div>`
-                    : `<span style="font-size:13px; font-weight:600; margin-right:auto;">Da Ordinare:</span>
+                let controlsHtml = '';
+                if (!isAvail) {
+                    controlsHtml = `<div style="width:100%; text-align:center; padding:8px; background:#fef2f2; color:#991b1b; font-weight:800; font-size:12px; border-radius:6px; border:1px solid #fecaca;">🔴 Prodotto non disponibile dal fornitore</div>`;
+                } else if (isBlocked) {
+                    controlsHtml = `<div style="width:100%; text-align:center; padding:8px; background:#fef2f2; color:#991b1b; font-weight:800; font-size:12px; border-radius:6px; border:1px solid #fecaca;">⛔ Prodotto bloccato dall'Admin (Non ordinabile)</div>`;
+                } else {
+                    controlsHtml = `<span style="font-size:13px; font-weight:600; margin-right:auto;">Da Ordinare:</span>
                        <button class="qty-btn" onclick="updateOrder(${item.id}, -1)">-</button>
                        <input type="number" class="qty-input" value="${window.getOrderQty(item)}" onchange="setOrder(${item.id}, this.value)">
                        <span class="unit-label">${item.unit}</span>
                        <button class="qty-btn" onclick="updateOrder(${item.id}, 1)">+</button>`;
+                }
 
                 c.innerHTML += `
-                    <div class="card-item ${isLow && !isUnavailable ? 'low-stock-alert' : ''}" style="${isUnavailable ? 'opacity:0.85; background:#fafafa;' : ''}">
-                        <div class="item-name-box" style="border-left-color:${isUnavailable ? '#dc2626' : (sup?.color || '#043927')};">
+                    <div class="card-item ${isLow && isAvail && !isBlocked ? 'low-stock-alert' : ''}" style="${(!isAvail || isBlocked) ? 'opacity:0.85; background:#fafafa;' : ''}">
+                        <div class="item-name-box" style="border-left-color:${(!isAvail || isBlocked) ? '#dc2626' : (sup?.color || '#043927')};">
                             <div class="item-name">
                                 <span>${item.name}</span>
                                 <div style="display:flex; gap:4px; align-items:center;">
-                                    ${blockedBadgeHtml}
+                                    ${statusBadgeHtml}
                                     ${favBadgeHtml}
                                 </div>
                             </div>
@@ -1614,16 +1746,19 @@
             if (!window.checkAuthGuard()) return;
             const i = window.inventoryData.find(x => x.id === id); 
             if(i) { 
-                if (i.isOrderBlocked || i.isAvailable === false) return window.showAlert("⛔ Prodotto non disponibile dal fornitore.");
+                if (i.isAvailable === false) return window.showAlert("🔴 Prodotto attualmente non disponibile dal fornitore.");
+                if (i.isOrderBlocked) return window.showAlert("⛔ Prodotto bloccato dall'Admin. Non può essere ordinato.");
                 const field = window.getLocationKey() === 'ostermalm' ? 'orderQty_ostermalm' : 'orderQty_vasastan';
                 await updateDoc(doc(db, "inventory", String(id)), { [field]: Math.max(0, window.getOrderQty(i) + d) }); 
             } 
         };
+
         window.setOrder = async function(id, v) { 
             if (!window.checkAuthGuard()) return;
             const i = window.inventoryData.find(x => x.id === id); 
             if(i) { 
-                if (i.isOrderBlocked || i.isAvailable === false) return window.showAlert("⛔ Prodotto non disponibile dal fornitore.");
+                if (i.isAvailable === false) return window.showAlert("🔴 Prodotto attualmente non disponibile dal fornitore.");
+                if (i.isOrderBlocked) return window.showAlert("⛔ Prodotto bloccato dall'Admin. Non può essere ordinato.");
                 const field = window.getLocationKey() === 'ostermalm' ? 'orderQty_ostermalm' : 'orderQty_vasastan';
                 await updateDoc(doc(db, "inventory", String(id)), { [field]: Math.max(0, parseFloat(v) || 0) }); 
             } 
@@ -1635,19 +1770,18 @@
             const dateVal = document.getElementById('order-date-picker').value;
             if (!dateVal) return window.showAlert("🚚 Seleziona una data di consegna.");
 
-            // Azzera e rimuove dal carrello i prodotti diventati Non Disponibili o Bloccati
-            const unavailableInCart = window.inventoryData.filter(i => window.getOrderQty(i) > 0 && (i.isOrderBlocked || i.isAvailable === false));
-            if (unavailableInCart.length > 0) {
-                const removedNames = unavailableInCart.map(i => i.name).join(', ');
+            const unavailInCart = window.inventoryData.filter(i => window.getOrderQty(i) > 0 && (i.isAvailable === false || i.isOrderBlocked));
+            if (unavailInCart.length > 0) {
                 const batch = writeBatch(db);
                 const field = window.getLocationKey() === 'ostermalm' ? 'orderQty_ostermalm' : 'orderQty_vasastan';
-                unavailableInCart.forEach(i => batch.update(doc(db, "inventory", String(i.id)), { [field]: 0 }));
+                unavailInCart.forEach(i => batch.update(doc(db, "inventory", String(i.id)), { [field]: 0 }));
                 await batch.commit();
-                window.showAlert(`⚠️ Prodotti non disponibili rimossi dall'ordine: ${removedNames}`);
+                const names = unavailInCart.map(i => i.name).join(', ');
+                window.showAlert(`⚠️ Alcuni prodotti (${names}) non sono più ordinabili e sono stati rimossi dal carrello.`);
             }
 
             const items = window.inventoryData.filter(i => window.getOrderQty(i) > 0 && !i.isOrderBlocked && i.isAvailable !== false);
-            if (items.length === 0) return window.showAlert("🛒 Nessun prodotto disponibile ed ordinabile selezionato.");
+            if (items.length === 0) return window.showAlert("🛒 Nessun prodotto valido ed ordinabile selezionato.");
 
             window.renderSummaryModalContent(op, dateVal);
             document.getElementById('summary-modal').classList.add('active');
@@ -1846,7 +1980,7 @@
             });
         };
 
-        // MAGAZZINO ED EDITOR - FUNZIONI PREFERITI E BLOCCO ORDINE RESERVATED ADMIN
+        // MAGAZZINO ED EDITOR
         window.toggleFavorite = async function(itemId) {
             if (!window.checkAuthGuard()) return;
             if (!window.currentUserProfile || window.currentUserProfile.role !== 'admin') {
@@ -1867,8 +2001,8 @@
             }
             const item = window.inventoryData.find(x => x.id === itemId);
             if (item) {
-                const newBlockedStatus = !(item.isOrderBlocked || item.isAvailable === false);
-                await updateDoc(doc(db, "inventory", String(itemId)), { isOrderBlocked: newBlockedStatus, isAvailable: !newBlockedStatus });
+                const newBlockedStatus = !item.isOrderBlocked;
+                await updateDoc(doc(db, "inventory", String(itemId)), { isOrderBlocked: newBlockedStatus });
                 window.showAlert(newBlockedStatus ? `⛔ ${item.name} bloccato dagli ordini!` : `✅ ${item.name} sbloccato per gli ordini!`);
             }
         };
@@ -1888,9 +2022,8 @@
                 const minVas = (item.minQty_vasastan !== undefined && item.minQty_vasastan !== null) ? item.minQty_vasastan : (item.minQty ?? 2);
                 const minOst = (item.minQty_ostermalm !== undefined && item.minQty_ostermalm !== null) ? item.minQty_ostermalm : 2;
 
-                const isUnavailable = item.isOrderBlocked || item.isAvailable === false;
-                const blockBtnText = isUnavailable ? '🔓 Sblocca Ordine' : '⛔ Blocca Ordine';
-                const blockBtnStyle = isUnavailable 
+                const blockBtnText = item.isOrderBlocked ? '🔓 Sblocca Ordine' : '⛔ Blocca Ordine';
+                const blockBtnStyle = item.isOrderBlocked 
                     ? 'background:#fee2e2; color:#991b1b; border:1px solid #fca5a5;' 
                     : 'background:#f0fdf4; color:#166534; border:1px solid #bbf7d0;';
 
@@ -1907,7 +2040,7 @@
                             <div class="item-subtext" style="font-weight: 600; color: var(--primary); margin-top: 4px;">
                                 📉 Min: Vasastan ${minVas} ${item.unit} | Östermalm ${minOst} ${item.unit}
                             </div>
-                            ${isUnavailable ? `<div style="font-size:11px; font-weight:800; color:#991b1b; margin-top:4px;">⛔ Prodotto Bloccato per gli Ordini</div>` : ''}
+                            ${item.isOrderBlocked ? `<div style="font-size:11px; font-weight:800; color:#991b1b; margin-top:4px;">⛔ Prodotto Bloccato per gli Ordini</div>` : ''}
                         </div>
                         <div class="action-row-btn">
                             <button class="btn-action-edit" onclick="openAddModal(${item.id})">✏ Modifica</button>
@@ -1921,7 +2054,9 @@
         window.openAddModal = function(id = null) {
             if (!window.checkAuthGuard()) return;
             window.closeAll();
+            
             window.populateAllSupplierFilters();
+
             document.getElementById('edit-item-id').value = ''; 
             document.getElementById('new-name').value = ''; 
             document.getElementById('new-price').value = '0';
@@ -2131,7 +2266,7 @@
             }
         };
 
-        // EXPORT EXCEL CON AUTO-FIT COLONNE ED ALCOLICI/BEVANDE COMPLETI
+        // EXPORT EXCEL
         window.promptExportExcelModal = () => { 
             if (!window.checkAuthGuard()) return; 
             window.closeAll(); 
