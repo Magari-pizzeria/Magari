@@ -3,40 +3,27 @@
 <head>
 <!--
 ====================================================================
-[MAGARI APP - HISTORICAL CHANGELOG REGISTRY & ARCHIVE - LAST 10 RELEASES]
+[MAGARI APP - HISTORICAL CHANGELOG REGISTRY & ARCHIVE]
+
+- v4.3.4 STABLE (27/10/2026 - REPORT CONSUMI AVANZATO CATEGORIE & FORNITORI):
+  1. Integrato il selettore di raggruppamento dinamico nel Report Consumi: "Per Categoria (Food vs Beverage)" e "Per Fornitore".
+  2. Implementati i sottototali per ogni singola categoria (Latticini, Farine, Conserve, Salumi, ecc.) e la distinzione netta con totali dedicati per FOOD e BEVERAGE.
+  3. Implementato il raggruppamento per Fornitore con totale speso specifico per azienda nel periodo selezionato.
+  4. Mantenuto intatto il sistema di Accesso Rapido (1-Tap Login) e l'isolamento sedi Vasastan/Östermalm.
 
 - v4.3.3 STABLE (21/10/2026 - ACCESSO RAPIDO 1-TAP & VELOCIZZAZIONE AVVIO):
   1. Introdotto il sistema di Accesso Rapido (1-Tap Login) con salvataggio locale sicuro delle credenziali (Email e Password).
-  2. Rimossa la persistenza token bloccante all'avvio dell'app, eliminando definitamente i rallentamenti e i congelamenti nel caricamento delle pagine.
-  3. Pre-compilazione automatica del modale di Login con pulsante di rimozione dati salvati.
+  2. Rimossa la persistenza token bloccante all'avvio dell'app, eliminando i rallentamenti nel caricamento delle pagine.
 
 - v4.3.2 STABLE (21/10/2026 - CHECKBOX MOSTRA PASSWORD):
   1. Integrata la casella di spunta (checkbox) "Mostra password" nel modale d'autenticazione per Login e Registrazione Staff.
 
 - v4.3.1 STABLE (21/10/2026 - FIX DROPDOWN RESET & AGGIORNAMENTO DISPONIBILITÀ):
-  1. Risolto il bug del reset nei menu a tendina (dropdown) dei fornitori tramite memorizzazione e ripristino di sel.value prima del re-render.
-  2. Integrata la gestione dei prodotti Non Disponibili (isAvailable) e Blocco Ordine Admin (isOrderBlocked) con storno al checkout.
+  1. Risolto il bug del reset nei menu a tendina dei fornitori durante il refresh Firestore.
+  2. Gestione prodotti Non Disponibili (isAvailable) e Blocco Ordine Admin (isOrderBlocked).
 
 - v4.3.0 STABLE (20/10/2026 - ISOLAMENTO SEDI MULTI-LOCALE):
-  1. Separazione completa di giacenze, minimi scorta, carrelli e avvisi staff tra le sedi di Vasastan e Östermalm.
-
-- v4.2.9 STABLE (18/10/2026 - EXPORT EXCEL AVANZATO MULTI-SHEET):
-  1. Export Excel professionale con fogli separati (Food & Supplies / Alcohol & Beverages) e auto-fit delle colonne.
-
-- v4.2.8 STABLE (15/10/2026 - NOTIFICHE STAFF REALTIME ADMIN):
-  1. Sistema di notifiche toast persistenti per avvisare gli Admin delle nuove registrazioni di operatori Staff in tempo reale.
-
-- v4.2.7 STABLE (12/10/2026 - VERIFICA CONSEGNE & STORNO AUTOMATICO):
-  1. Modale di spunta merci in arrivo nello Storico con accreditamento automatico nelle giacenze di magazzino e registro ammanchi.
-
-- v4.2.6 STABLE (08/10/2026 - PALETTE CROMATICA & ORDINAMENTO FORNITORI):
-  1. Griglia con 12 colori identificativi per i badge fornitori e pulsanti freccia (⬆️ ⬇️) per riordinare la lista fornitori nei menu.
-
-- v4.2.5 STABLE (05/10/2026 - GESTIONE PRODOTTI PREFERITI ⭐):
-  1. Pulsante stella nei prodotti per contrassegnare gli ingredienti chiave e filtro dedicato "⭐ Solo Preferiti" nelle viste.
-
-- v4.2.4 STABLE (01/10/2026 - BACHECA AVVISI STAFF PER SEDE):
-  1. Banner comunicazioni in cima alla schermata principale pubblicato in tempo reale dagli Admin per la sede specifica.
+  1. Separazione completa di giacenze, minimi scorta, carrelli e avvisi staff tra Vasastan e Östermalm.
 ====================================================================
 -->
     <meta charset="UTF-8">
@@ -55,11 +42,11 @@
     <meta name="apple-mobile-web-app-title" content="Magari Pizzeria">
     
     <!-- Icone Schermata Home & Favicon -->
-    <link rel="manifest" href="manifest.json?v=4.3.3">
-    <link rel="apple-touch-icon" href="logo-square.png?v=4.3.3">
-    <link rel="icon" type="image/png" href="logo-square.png?v=4.3.3">
+    <link rel="manifest" href="manifest.json?v=4.3.4">
+    <link rel="apple-touch-icon" href="logo-square.png?v=4.3.4">
+    <link rel="icon" type="image/png" href="logo-square.png?v=4.3.4">
 
-    <title>Magari v4.3.3 STABLE</title>
+    <title>Magari v4.3.4 STABLE</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -264,7 +251,7 @@
             <div class="drawer-header" style="text-align: center;">
                 <img src="logo-header.png" alt="Magari Logo" style="max-width: 170px; height: auto; margin-bottom: 4px;" onerror="this.style.display='none'; document.getElementById('drawer-text-fallback').style.display='block';">
                 <div id="drawer-text-fallback" class="brand-title" style="display:none; font-size: 24px;">MAGARI</div>
-                <div class="brand-subtitle" style="font-size: 9px; background:#2e7d32;">v4.3.3 STABLE</div>
+                <div class="brand-subtitle" style="font-size: 9px; background:#2e7d32;">v4.3.4 STABLE</div>
             </div>
 
             <!-- USER ACCOUNT BANNER NELLO MENU -->
@@ -300,7 +287,7 @@
             <div class="header-brand-text">
                 <img src="logo-header.png" alt="Magari" style="height: 34px; width: auto;" onerror="this.style.display='none'; document.getElementById('header-text-fallback').style.display='block';">
                 <div id="header-text-fallback" class="brand-title" style="display:none;">MAGARI</div>
-                <div class="brand-subtitle" style="background:#2e7d32;">v4.3.3 STABLE</div>
+                <div class="brand-subtitle" style="background:#2e7d32;">v4.3.4 STABLE</div>
             </div>
             <div class="page-badge" id="page-title">Ordini</div>
         </div>
@@ -457,23 +444,42 @@
             <div class="content-list" id="suppliers-list"></div>
         </div>
 
-        <!-- 6. REPORT CONSUMI (SOLO ADMIN) -->
+        <!-- 6. REPORT CONSUMI (SOLO ADMIN - v4.3.4 AVANZATO) -->
         <div id="view-sprechi" class="view-section">
             <div class="page-lock-banner" id="lock-banner-sprechi">
                 <div class="page-lock-box"><div style="font-size: 32px; margin-bottom: 8px;">🔒</div><h3 style="margin-bottom: 6px;">Sezione Riservata Admin</h3><p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">Effettua il Login con account Admin per accedere.</p><button class="btn-save" onclick="openAuthModal()">Accedi come Admin</button></div>
             </div>
             <div class="top-bar-container">
-                <div class="form-group"><label>Periodo Report:</label><select id="report-period-type" class="form-control" onchange="toggleReportPeriodInputs()"><option value="total">Totale Storico Ordini</option><option value="month">Mese Specifico</option><option value="stock">Giacenze Attuali</option></select></div>
-                <div class="form-group" id="report-month-select-group" style="display:none;"><label>Mese:</label><input type="month" id="report-month-picker" class="form-control"></div>
-                <button class="btn-save" onclick="generateRealReport()" style="width:100%; padding:10px;">📋 Genera Report</button>
+                <div class="form-group">
+                    <label>Periodo Report:</label>
+                    <select id="report-period-type" class="form-control" onchange="toggleReportPeriodInputs()">
+                        <option value="total">Totale Storico Ordini</option>
+                        <option value="month" selected>Mese Specifico</option>
+                        <option value="stock">Giacenze Attuali</option>
+                    </select>
+                </div>
+                <div class="form-group" id="report-month-select-group">
+                    <label>Mese:</label>
+                    <input type="month" id="report-month-picker" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label style="font-weight:bold; color:var(--primary);">📊 Modalità di Raggruppamento:</label>
+                    <select id="report-group-mode" class="form-control" style="border:1px solid var(--primary); font-weight:bold; background:#e8f5e9; color:#2e7d32;">
+                        <option value="category">📂 Raggruppa per Categoria (Food / Beverage)</option>
+                        <option value="supplier">🚚 Raggruppa per Fornitore</option>
+                    </select>
+                </div>
+                <button class="btn-save" onclick="generateRealReport()" style="width:100%; padding:12px; font-size:15px; font-weight:bold;">📋 Genera Report Consumi</button>
             </div>
-            <div id="report-results-container" style="display:none; background:white; padding:16px; border-radius:8px; margin:16px;">
-                <h3 id="report-title-display" style="font-size:14px; margin-bottom:10px; color:var(--primary);"></h3>
-                <div style="font-weight:bold; font-size:12px; color:#1e293b;">🍷 Alcolici & Bevande</div>
-                <table class="report-table" id="table-alcohol-report"><thead><tr><th>Prodotto</th><th>Qtà</th><th>Costo Totale</th></tr></thead><tbody></tbody></table>
-                <div style="font-weight:bold; font-size:12px; color:#1e293b; margin-top:10px;">🍕 Cibo & Consumabili</div>
-                <table class="report-table" id="table-food-report"><thead><tr><th>Prodotto</th><th>Qtà</th><th>Costo Totale</th></tr></thead><tbody></tbody></table>
-                <div id="grand-total-report-box" style="margin-top:14px; padding:10px; background:#e8f5e9; border:1px solid #c8e6c9; border-radius:6px; font-weight:800; font-size:14px; color:#2e7d32; text-align:right;"></div>
+
+            <div id="report-results-container" style="display:none; padding:16px;">
+                <h3 id="report-title-display" style="font-size:15px; font-weight:800; margin-bottom:12px; color:var(--primary); background:white; padding:10px; border-radius:8px; border:1px solid #cbd5e1;"></h3>
+                
+                <!-- CONTENITORE DINAMICO REPORT -->
+                <div id="report-dynamic-content"></div>
+
+                <!-- BOX GRAN TOTALE GENERALE -->
+                <div id="grand-total-report-box" style="margin-top:16px; padding:14px; background:#043927; color:white; border-radius:10px; font-weight:800; font-size:16px; text-align:right; box-shadow:0 4px 12px rgba(0,0,0,0.15);"></div>
             </div>
         </div>
 
@@ -572,9 +578,9 @@
                 </div>
 
                 <div class="faq-item-box">
-                    <div class="faq-question">🍷 12. Come funziona la distinzione Alcolici / Bevande negli Excel e Report?</div>
+                    <div class="faq-question">🍷 12. Come funziona la suddivisione per Categoria e Fornitore nei Report?</div>
                     <div class="faq-answer">
-                        Gli alcolici e le bevande analcoliche vengono gestiti con due subtotali separati ed un gran totale unificato, permettendo un controllo contabile e di licenza preciso per ogni sede.
+                        Nel menu Report Consumi puoi alternare la vista tra <b>📂 Per Categoria</b> (con totali distinti per Food, Beverage e subtotali per ogni singola categoria) e <b>🚚 Per Fornitore</b> (con la spesa totale calcolata per ogni singola azienda fornitrice).
                     </div>
                 </div>
             </div>
@@ -636,7 +642,7 @@
 
         <!-- FOOTER FIRMA DEVELOPER -->
         <footer style="background:#043927; color:#c8e6c9; text-align:center; padding:16px 14px; font-size:11px; border-top:1px solid #1b5e20; margin-top:auto; width:100%; position:relative; z-index:80;">
-            <div>&copy; 2026 <b>Magari Pizzeria Stockholm</b> - Versione Ufficiale Stabile v4.3.3</div>
+            <div>&copy; 2026 <b>Magari Pizzeria Stockholm</b> - Versione Ufficiale Stabile v4.3.4</div>
             <div style="margin-top:6px; font-size:11px; color:#ffffff;">
                 App sviluppata da <span style="color:#f59e0b; font-weight:bold; background:rgba(0,0,0,0.3); padding:2px 6px; border-radius:4px; border:1px solid rgba(245,158,11,0.3);">Nicolas Cappiello</span>
             </div>
@@ -840,7 +846,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // IMPOSTA PERSISTENZA DI SESSIONE PER EVITARE BLOCCHI ALL'AVVIO
+        // IMPOSTA PERSISTENZA DI SESSIONE
         setPersistence(auth, browserSessionPersistence).catch(err => console.log("Persistence setting:", err));
 
         window.currentUserProfile = null;
@@ -2386,44 +2392,47 @@
             window.showAlert("📊 File Excel scaricato con la distinzione Alcolici/Bevande!");
         };
 
-        // REPORT CONSUMI ENGINE
+        // REPORT CONSUMI ENGINE AVANZATO (v4.3.4 - CATEGORIE E FORNITORI)
         window.generateRealReport = function() {
             if (!window.checkAuthGuard()) return;
 
             const periodType = document.getElementById('report-period-type').value;
             let monthVal = document.getElementById('report-month-picker').value;
+            const groupMode = document.getElementById('report-group-mode').value;
+            
             const resultsContainer = document.getElementById('report-results-container');
             const titleDisplay = document.getElementById('report-title-display');
-            const alcTbody = document.querySelector('#table-alcohol-report tbody');
-            const foodTbody = document.querySelector('#table-food-report tbody');
+            const dynamicContent = document.getElementById('report-dynamic-content');
             const grandTotalBox = document.getElementById('grand-total-report-box');
 
-            if (periodType === 'month') {
-                if (!monthVal) {
-                    const now = new Date();
-                    const yr = now.getFullYear();
-                    const mo = String(now.getMonth() + 1).padStart(2, '0');
-                    monthVal = `${yr}-${mo}`;
-                    document.getElementById('report-month-picker').value = monthVal;
-                }
+            if (periodType === 'month' && !monthVal) {
+                const now = new Date();
+                monthVal = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+                document.getElementById('report-month-picker').value = monthVal;
             }
 
-            const isAlcohol = (cat) => (cat === 'Alcolici' || cat === 'Bevande');
             const activeLocShort = window.activeLocation ? window.activeLocation.split(' ')[0] : '';
+            const isAlcoholCategory = (cat) => (cat === 'Alcolici' || cat === 'Bevande');
 
-            let itemTotals = {}; 
+            // 1. RACCOLTA DATI
+            let aggregatedItems = []; // Array di { name, qty, price, totalCost, category, supplierName, unit }
 
             if (periodType === 'stock') {
                 titleDisplay.innerText = `📊 Report Valore Giacenze Attuali (${window.activeLocation || 'Tutte le sedi'})`;
                 window.inventoryData.forEach(item => {
                     const qty = window.getQty(item);
                     if (qty > 0) {
-                        itemTotals[item.name] = {
+                        const sup = window.suppliersData.find(s => String(s.id) === String(item.supplierId))?.name || 'N/D';
+                        const price = item.price || 0;
+                        aggregatedItems.push({
+                            name: item.name,
                             qty: qty,
-                            price: item.price || 0,
-                            unit: item.unit,
-                            isAlc: isAlcohol(item.category)
-                        };
+                            price: price,
+                            totalCost: parseFloat((qty * price).toFixed(2)),
+                            category: item.category || 'Altro',
+                            supplierName: sup,
+                            unit: item.unit
+                        });
                     }
                 });
             } else {
@@ -2437,72 +2446,157 @@
                     if (periodType === 'month') {
                         if (!h.timestamp) return false;
                         let hMonth = "";
-                        
                         if (h.timestamp.includes('/')) {
-                            const datePart = h.timestamp.split(',')[0].trim();
-                            const parts = datePart.split('/');
-                            if (parts.length === 3) {
-                                hMonth = `${parts[2]}-${parts[1].padStart(2, '0')}`;
-                            }
+                            const parts = h.timestamp.split(',')[0].trim().split('/');
+                            if (parts.length === 3) hMonth = `${parts[2]}-${parts[1].padStart(2, '0')}`;
                         } else if (h.timestamp.includes('-')) {
                             const parts = h.timestamp.split('T')[0].split('-');
-                            if (parts.length >= 2) {
-                                hMonth = `${parts[0]}-${parts[1].padStart(2, '0')}`;
-                            }
+                            if (parts.length >= 2) hMonth = `${parts[0]}-${parts[1].padStart(2, '0')}`;
                         }
-                        
                         return hMonth === monthVal;
                     }
                     return true;
                 });
 
+                // Mappatura articoli accumulati
+                let map = {};
                 filteredHistory.forEach(h => {
                     if (Array.isArray(h.items)) {
                         h.items.forEach(it => {
                             const invMatch = window.inventoryData.find(x => x.id === it.id || x.name.toLowerCase() === it.name.toLowerCase());
+                            const cat = invMatch ? (invMatch.category || 'Altro') : 'Altro';
                             const price = invMatch ? (invMatch.price || 0) : 0;
-                            const isAlc = invMatch ? isAlcohol(invMatch.category) : false;
-
-                            if (!itemTotals[it.name]) {
-                                itemTotals[it.name] = { qty: 0, price: price, unit: it.unit, isAlc: isAlc };
+                            const supName = h.supplierName || 'Fornitore';
+                            
+                            const key = `${it.name}_${supName}`;
+                            if (!map[key]) {
+                                map[key] = {
+                                    name: it.name,
+                                    qty: 0,
+                                    price: price,
+                                    category: cat,
+                                    supplierName: supName,
+                                    unit: it.unit
+                                };
                             }
-                            itemTotals[it.name].qty += parseFloat(it.qty) || 0;
+                            map[key].qty += parseFloat(it.qty) || 0;
                         });
                     }
                 });
+
+                Object.values(map).forEach(i => {
+                    i.totalCost = parseFloat((i.qty * i.price).toFixed(2));
+                    aggregatedItems.push(i);
+                });
             }
 
-            alcTbody.innerHTML = '';
-            foodTbody.innerHTML = '';
-            let totalAlcCost = 0;
-            let totalFoodCost = 0;
-            let hasAlc = false;
-            let hasFood = false;
+            if (aggregatedItems.length === 0) {
+                dynamicContent.innerHTML = '<div style="background:white; padding:20px; text-align:center; border-radius:8px; color:#666; font-weight:bold;">Nessun dato registrato per il periodo selezionato.</div>';
+                grandTotalBox.innerHTML = `💰 COSTO TOTALE STIMATO: 0.00 SEK`;
+                resultsContainer.style.display = 'block';
+                return;
+            }
 
-            Object.keys(itemTotals).sort().forEach(name => {
-                const data = itemTotals[name];
-                const cost = parseFloat((data.qty * data.price).toFixed(2));
-                const rowHtml = `<tr><td><b>${name}</b></td><td>${data.qty} ${data.unit}</td><td>${cost.toFixed(2)} SEK</td></tr>`;
+            let overallGrandTotal = 0;
+            dynamicContent.innerHTML = '';
 
-                if (data.isAlc) {
-                    alcTbody.innerHTML += rowHtml;
-                    totalAlcCost += cost;
-                    hasAlc = true;
-                } else {
-                    foodTbody.innerHTML += rowHtml;
-                    totalFoodCost += cost;
-                    hasFood = true;
-                }
-            });
+            // 2. RENDERING PER CATEGORIA
+            if (groupMode === 'category') {
+                let categoriesMap = {};
+                aggregatedItems.forEach(item => {
+                    if (!categoriesMap[item.category]) categoriesMap[item.category] = [];
+                    categoriesMap[item.category].push(item);
+                });
 
-            if (!hasAlc) alcTbody.innerHTML = '<tr><td colspan="3" style="color:#888; text-align:center;">Nessun dato registrato.</td></tr>';
-            if (!hasFood) foodTbody.innerHTML = '<tr><td colspan="3" style="color:#888; text-align:center;">Nessun dato registrato.</td></tr>';
+                let totalBev = 0;
+                let totalFood = 0;
 
-            const grandTotal = parseFloat((totalAlcCost + totalFoodCost).toFixed(2));
-            grandTotalBox.innerHTML = `💰 COSTO TOTALE STIMATO: <span style="font-size:16px;">${grandTotal.toFixed(2)} SEK</span>`;
+                let bevHtml = `<div style="background:white; padding:14px; border-radius:10px; margin-bottom:16px; border:1px solid #cbd5e1; box-shadow:0 2px 4px rgba(0,0,0,0.03);">
+                    <h4 style="font-size:15px; color:#1e3a8a; border-bottom:2px solid #2563eb; padding-bottom:6px; margin-bottom:10px;">🍷 BEVERAGE & ALCOLICI</h4>`;
 
+                let foodHtml = `<div style="background:white; padding:14px; border-radius:10px; margin-bottom:16px; border:1px solid #cbd5e1; box-shadow:0 2px 4px rgba(0,0,0,0.03);">
+                    <h4 style="font-size:15px; color:#1b5e20; border-bottom:2px solid #2e7d32; padding-bottom:6px; margin-bottom:10px;">🍕 FOOD & CONSUMABILI</h4>`;
+
+                let hasBev = false;
+                let hasFood = false;
+
+                Object.keys(categoriesMap).sort().forEach(catName => {
+                    const items = categoriesMap[catName];
+                    let catSubtotal = 0;
+                    
+                    let tableRows = items.map(i => {
+                        catSubtotal += i.totalCost;
+                        return `<tr><td><b>${i.name}</b> <span style="font-size:10px; color:#666;">(${i.supplierName})</span></td><td style="text-align:center;">${i.qty} ${i.unit}</td><td style="text-align:right;">${i.totalCost.toFixed(2)} SEK</td></tr>`;
+                    }).join('');
+
+                    const catBlock = `
+                        <div style="margin-bottom:12px; background:#f8fafc; padding:10px; border-radius:8px; border:1px solid #e2e8f0;">
+                            <div style="font-weight:bold; font-size:13px; color:var(--primary); margin-bottom:6px;">${window.getCategoryEmoji(catName)} ${catName}</div>
+                            <table class="report-table" style="width:100%; font-size:12px; background:white;">
+                                <thead><tr style="background:#f1f5f9;"><th>Prodotto</th><th style="text-align:center;">Qtà</th><th style="text-align:right;">Totale</th></tr></thead>
+                                <tbody>${tableRows}</tbody>
+                                <tfoot><tr><td colspan="2" style="font-weight:bold; text-align:right;">Sottototale ${catName}:</td><td style="text-align:right; font-weight:bold; color:var(--primary);">${catSubtotal.toFixed(2)} SEK</td></tr></tfoot>
+                            </table>
+                        </div>`;
+
+                    if (isAlcoholCategory(catName)) {
+                        bevHtml += catBlock;
+                        totalBev += catSubtotal;
+                        hasBev = true;
+                    } else {
+                        foodHtml += catBlock;
+                        totalFood += catSubtotal;
+                        hasFood = true;
+                    }
+                });
+
+                bevHtml += `<div style="text-align:right; font-size:14px; font-weight:800; color:#1e3a8a; background:#eff6ff; padding:8px 12px; border-radius:6px; border:1px solid #bfdbfe; margin-top:8px;">🍹 TOTALE BEVERAGE: ${totalBev.toFixed(2)} SEK</div></div>`;
+                foodHtml += `<div style="text-align:right; font-size:14px; font-weight:800; color:#1b5e20; background:#f0fdf4; padding:8px 12px; border-radius:6px; border:1px solid #bbf7d0; margin-top:8px;">🍕 TOTALE FOOD: ${totalFood.toFixed(2)} SEK</div></div>`;
+
+                if (hasBev) dynamicContent.innerHTML += bevHtml;
+                if (hasFood) dynamicContent.innerHTML += foodHtml;
+
+                overallGrandTotal = totalBev + totalFood;
+
+            } 
+            // 3. RENDERING PER FORNITORE
+            else if (groupMode === 'supplier') {
+                let suppliersMap = {};
+                aggregatedItems.forEach(item => {
+                    if (!suppliersMap[item.supplierName]) suppliersMap[item.supplierName] = [];
+                    suppliersMap[item.supplierName].push(item);
+                });
+
+                Object.keys(suppliersMap).sort().forEach(supName => {
+                    const items = suppliersMap[supName];
+                    const supObj = window.suppliersData.find(s => s.name === supName);
+                    const supColor = supObj?.color || '#1565c0';
+                    let supSubtotal = 0;
+
+                    let tableRows = items.map(i => {
+                        supSubtotal += i.totalCost;
+                        return `<tr><td><b>${i.name}</b> <span style="font-size:10px; color:#666;">(${window.getCategoryEmoji(i.category)} ${i.category})</span></td><td style="text-align:center;">${i.qty} ${i.unit}</td><td style="text-align:right;">${i.totalCost.toFixed(2)} SEK</td></tr>`;
+                    }).join('');
+
+                    overallGrandTotal += supSubtotal;
+
+                    dynamicContent.innerHTML += `
+                        <div style="background:white; padding:14px; border-radius:10px; margin-bottom:14px; border:1px solid #cbd5e1; border-left:5px solid ${supColor}; box-shadow:0 2px 4px rgba(0,0,0,0.03);">
+                            <div style="font-weight:800; font-size:16px; color:${supColor}; margin-bottom:8px;">🚚 ${supName}</div>
+                            <table class="report-table" style="width:100%; font-size:12px; background:white;">
+                                <thead><tr style="background:#f1f5f9;"><th>Prodotto</th><th style="text-align:center;">Qtà</th><th style="text-align:right;">Totale</th></tr></thead>
+                                <tbody>${tableRows}</tbody>
+                            </table>
+                            <div style="text-align:right; font-size:13px; font-weight:800; color:${supColor}; background:#f8fafc; padding:8px 12px; border-radius:6px; border:1px solid #e2e8f0; margin-top:8px;">
+                                💰 Spesa Totale con ${supName}: ${supSubtotal.toFixed(2)} SEK
+                            </div>
+                        </div>`;
+                });
+            }
+
+            grandTotalBox.innerHTML = `💰 COSTO TOTALE COMPLESSIVO: <span style="font-size:18px;">${overallGrandTotal.toFixed(2)} SEK</span>`;
             resultsContainer.style.display = 'block';
-            window.showAlert("📊 Report generato con successo!");
+            window.showAlert("📊 Report aggiornato!");
         };
 
         // BUG REPORT & AZIONI RESET
